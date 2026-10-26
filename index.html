@@ -74,7 +74,11 @@ img,svg{max-width:100%}
 .btn.small{padding:6px 10px;font-size:14px;border-radius:8px}
 .btn:disabled{opacity:.55;cursor:default}
 
-main{max-width:1120px;margin:0 auto;padding:22px 20px 60px}
+main{max-width:1120px;margin:0 auto;padding:22px 20px 110px}
+.fab-wrap{position:fixed;right:0;bottom:0;z-index:30;padding:0 18px calc(18px + env(safe-area-inset-bottom,0px)) 0;pointer-events:none}
+.fab{pointer-events:auto;width:58px;height:58px;border-radius:18px;border:0;background:var(--brand);color:var(--brand-ink);font-size:30px;line-height:1;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.22);display:flex;align-items:center;justify-content:center}
+.fab:hover{filter:brightness(1.08)}
+.stale{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
 h2{font-size:17px;margin:0 0 12px;letter-spacing:-.01em}
 h3{font-size:15px;margin:0 0 8px}
 .muted{color:var(--ink-3)}
@@ -229,9 +233,10 @@ dialog::backdrop{background:rgba(10,16,24,.45)}
   </div>
 </header>
 <main id="app"><p class="muted">Carregando…</p></main>
-<input type="file" id="file" accept=".ofx,.qfx,.csv,.txt,.pdf,application/pdf" hidden>
+<input type="file" id="file" multiple accept=".ofx,.qfx,.csv,.txt,.pdf,application/pdf" hidden>
 <input type="file" id="bkFile" accept=".json,application/json" hidden>
 <dialog id="dlg"></dialog>
+<div class="fab-wrap" id="fabWrap" hidden><button class="fab" id="fab" aria-label="Adicionar lançamento" title="Adicionar lançamento">+</button></div>
 <div class="toast" aria-live="polite"><div id="toast"></div></div>
 
 <script>
@@ -314,6 +319,7 @@ function categorize(desc,amt){
   const k=merchantKey(desc); if(S.rules[k]&&CAT[S.rules[k]]) return S.rules[k];
   const n=' '+norm(desc).replace(/[^a-z0-9& ]+/g,' ').replace(/\s+/g,' ')+' ';
   for(const [c,ws] of KW_NEUTRAL) if(ws.some(w=>n.includes(w))) return c;
+  if(amt<0&&/ saque/.test(n)&&S.accounts.some(a=>a.type==='dinheiro')) return 'interna';
   if(amt>0){
     for(const [c,ws] of KW_INCOME) if(ws.some(w=>n.includes(w))) return c;
     if(/ estorno| reembolso| devolucao| cashback/.test(n)){for(const [c,ws] of KW_EXP) if(ws.some(w=>n.includes(w))) return c;return 'outros'}
@@ -495,6 +501,7 @@ function renderTop(){
 }
 function render(){
   renderTop();
+  $('#fabWrap').hidden=!hasData();
   const app=$('#app');
   if(!S.tx.length&&!S.accounts.length&&view.tab!=='contas'){app.innerHTML=emptyHTML();bindEmpty();return}
   if(view.tab==='resumo'){app.innerHTML=resumoHTML();bindResumo()}
@@ -507,7 +514,7 @@ function emptyHTML(){
     <h1>Traga o extrato do seu banco e veja para onde vai o seu dinheiro.</h1>
     <p>Importe o arquivo OFX ou CSV que o app ou o internet banking do seu banco exporta. O Caixa organiza os lançamentos por categoria, calcula o saldo e aponta o que mudou de um mês para o outro.</p>
     <div class="row"><button class="btn primary" id="eImport">Importar extrato</button><button class="btn" id="eDemo">Explorar com dados de exemplo</button><button class="btn" id="eManual">Adicionar lançamento à mão</button></div>
-    <p class="notes">Os arquivos são lidos aqui mesmo, no seu navegador. Suas senhas do banco nunca passam pelo Caixa.</p>
+    <p class="notes">Dica: no app do banco, use Compartilhar e escolha o Caixa para importar sem salvar o arquivo. Os arquivos são lidos aqui mesmo, no seu celular. Suas senhas do banco nunca passam pelo Caixa.</p>
   </section>`;
 }
 function bindEmpty(){$('#eImport').onclick=pickFile;$('#eDemo').onclick=loadDemo;$('#eManual').onclick=()=>openTxDialog()}
@@ -524,6 +531,7 @@ function resumoHTML(){
   const rec=recurring(m).slice(0,6);
   const demo=S.accounts.some(a=>a.demo);
   return `
+  ${staleHTML()}
   ${demo?`<div class="in-item atencao" style="margin-bottom:16px"><strong>Você está vendo dados de exemplo</strong><p>Quando quiser usar com seus dados, <button class="btn small" id="rmDemo">remova o exemplo</button> e importe o extrato do seu banco.</p></div>`:''}
   <section class="hero">
     <div>
@@ -586,8 +594,18 @@ function resumoHTML(){
     </section>
   </div>`;
 }
+function daysSince(iso){return Math.floor((Date.parse(todayISO())-Date.parse(iso))/864e5)}
+function staleAccounts(){
+  return S.accounts.filter(a=>a.imported&&!a.demo).map(a=>({a,last:S.tx.filter(t=>t.acc===a.id).map(t=>t.date).sort().pop()}))
+    .filter(x=>x.last&&daysSince(x.last)>30&&(!x.a.lastImport||daysSince(x.a.lastImport)>7));
+}
+function staleHTML(){
+  const st=staleAccounts();if(!st.length)return'';
+  return `<div class="in-item atencao stale" style="margin-bottom:16px"><div><strong>${st.length===1?'Uma conta precisa de extrato novo':st.length+' contas precisam de extrato novo'}</strong><p>${st.map(x=>`${esc(x.a.name)}: último lançamento em ${fmtDate(x.last)}`).join(' · ')}</p></div><button class="btn small" id="staleImp">Importar agora</button></div>`;
+}
 function bindResumo(){
   const rm=$('#rmDemo');if(rm)rm.onclick=removeDemo;
+  const si=$('#staleImp');if(si)si.onclick=pickFile;
 }
 
 /* Transações */
@@ -669,7 +687,7 @@ function bindOrc(){
 }
 
 /* Contas */
-const TYPE_NAME={corrente:'Conta corrente',poupanca:'Poupança',cartao:'Cartão de crédito'};
+const TYPE_NAME={corrente:'Conta corrente',poupanca:'Poupança',cartao:'Cartão de crédito',dinheiro:'Dinheiro (carteira)'};
 function contasHTML(){
   return `<div class="grid two" style="margin-top:0">
   <section class="panel">
@@ -685,7 +703,7 @@ function contasHTML(){
     <ol class="steps">
       <li>No app ou internet banking, abra o <b>extrato</b> da conta ou a <b>fatura</b> do cartão.</li>
       <li>Procure a opção <b>Exportar</b>, <b>Baixar</b> ou <b>Compartilhar</b> e escolha <b>OFX</b> (Money), <b>CSV</b> (Excel) ou <b>PDF</b>. O OFX é o mais preciso; no PDF você confere os lançamentos antes de importar.</li>
-      <li>Toque em <b>Importar extrato</b> e escolha o arquivo. Lançamentos repetidos são ignorados, então pode importar períodos que se sobrepõem.</li>
+      <li>Toque em <b>Compartilhar</b> e escolha o <b>Caixa</b> na lista. Ou salve o arquivo e toque em <b>Importar extrato</b> aqui; dá para escolher vários arquivos de uma vez. Lançamentos repetidos são ignorados, então pode importar períodos que se sobrepõem.</li>
     </ol>
     <button class="btn primary" id="cImport" style="margin-top:8px">Importar extrato</button>
     <p class="muted" style="font-size:13px;margin-top:14px">Funciona com a maioria dos bancos brasileiros: Nubank, Itaú, Bradesco, Banco do Brasil, Caixa, Santander, Inter, C6 e outros. O arquivo OFX traz também o saldo, que o Caixa usa para conferir a conta.</p>
@@ -711,49 +729,66 @@ function bindContas(){
 
 /* ---------- Diálogos ---------- */
 const dlg=$('#dlg');
-function openDlg(html,bind){dlg.innerHTML=`<div class="dlg">${html}</div>`;bind&&bind();if(!dlg.open)dlg.showModal()}
-function closeDlg(){if(dlg.open)dlg.close()}
+let dlgCb=null;
+function openDlg(html,bind,onClose){if(dlgCb){const f=dlgCb;dlgCb=null;f()}dlg.innerHTML=`<div class="dlg">${html}</div>`;dlgCb=onClose||null;bind&&bind();if(!dlg.open)dlg.showModal()}
+function closeDlg(){const f=dlgCb;dlgCb=null;if(dlg.open)dlg.close();f&&f()}
+dlg.addEventListener('close',()=>{if(dlg.open)return;const f=dlgCb;dlgCb=null;f&&f()});
+function infoDlg(title,html){return new Promise(res=>openDlg(`<h2>${esc(title)}</h2>${html}<div class="dlg-act"><button class="btn primary" id="okInfo">Entendi</button></div>`,()=>{$('#okInfo').onclick=closeDlg},res))}
 function askConfirm(title,text,ok,danger){return new Promise(res=>{
   openDlg(`<h2>${esc(title)}</h2><p class="muted">${esc(text)}</p><div class="dlg-act"><button class="btn" id="cNo">Cancelar</button><button class="btn ${danger?'danger':'primary'}" id="cYes">${esc(ok)}</button></div>`,()=>{
-    $('#cNo').onclick=()=>{closeDlg();res(false)};$('#cYes').onclick=()=>{closeDlg();res(true)}});
+    $('#cNo').onclick=()=>{res(false);closeDlg()};$('#cYes').onclick=()=>{res(true);closeDlg()}},()=>res(false));
 })}
 function askText(title,label,val,ok){return new Promise(res=>{
   openDlg(`<h2>${esc(title)}</h2><div class="field"><label for="pVal">${esc(label)}</label><input id="pVal" value="${esc(val)}"></div><div class="dlg-act"><button class="btn" id="pNo">Cancelar</button><button class="btn primary" id="pYes">${esc(ok)}</button></div>`,()=>{
-    $('#pNo').onclick=()=>{closeDlg();res(null)};$('#pYes').onclick=()=>{const v=$('#pVal').value;closeDlg();res(v)};setTimeout(()=>$('#pVal').select(),30)});
+    $('#pNo').onclick=()=>{res(null);closeDlg()};$('#pYes').onclick=()=>{res($('#pVal').value);closeDlg()};$('#pVal').onkeydown=e=>{if(e.key==='Enter')$('#pYes').click()};setTimeout(()=>{const i=$('#pVal');i&&i.select()},30)},()=>res(null));
 })}
 dlg.addEventListener('click',e=>{if(e.target===dlg)closeDlg()});
 
 function accountSelect(id,sel){return `<select id="${id}">${S.accounts.map(a=>`<option value="${a.id}" ${a.id===sel?'selected':''}>${esc(a.name)}</option>`).join('')}</select>`}
 function openTxDialog(){
   let sign=-1;
-  const hasAcc=S.accounts.length>0;
+  const accs=S.accounts.filter(a=>!a.demo||S.accounts.every(x=>x.demo));
+  const hasCash=S.accounts.some(a=>a.type==='dinheiro');
+  const defAcc=(S.lastManualAcc&&S.accounts.some(a=>a.id===S.lastManualAcc))?S.lastManualAcc:(S.accounts.find(a=>a.type==='dinheiro')||S.accounts.find(a=>a.type==='corrente')||S.accounts[0])?.id;
+  const accOpts=S.accounts.map(a=>`<option value="${a.id}" ${a.id===defAcc?'selected':''}>${esc(a.name)}</option>`).join('')+(hasCash?'':`<option value="__cash" ${defAcc?'':'selected'}>Dinheiro (criar carteira)</option>`);
   openDlg(`<h2>Adicionar lançamento</h2>
-  <div class="field"><label>Tipo</label><div class="seg"><button type="button" id="sOut" aria-pressed="true">Gasto</button><button type="button" id="sIn" aria-pressed="false">Entrada</button></div></div>
-  <div class="field"><label for="tDesc">Descrição</label><input id="tDesc" placeholder="Ex.: Feira, aluguel, freela"></div>
-  <div class="field-row"><div class="field"><label for="tAmt">Valor (R$)</label><input id="tAmt" inputmode="decimal" placeholder="0,00"></div>
+  <div class="field"><div class="seg"><button type="button" id="sOut" aria-pressed="true">Gasto</button><button type="button" id="sIn" aria-pressed="false">Entrada</button></div></div>
+  <div class="field-row"><div class="field"><label for="tAmt">Valor (R$)</label><input id="tAmt" inputmode="decimal" placeholder="0,00" autocomplete="off"></div>
   <div class="field"><label for="tDate">Data</label><input id="tDate" type="date" value="${todayISO()}"></div></div>
-  <div class="field-row"><div class="field"><label for="tCat">Categoria</label><select id="tCat"><option value="">Automática</option>${catOptions('')}</select></div>
-  <div class="field"><label for="tAcc">Conta</label>${hasAcc?accountSelect('tAcc',S.accounts.find(a=>a.type==='corrente')?.id):`<input id="tAccNew" value="Carteira">`}</div></div>
+  <div class="field"><label for="tDesc">Descrição</label><input id="tDesc" placeholder="Feira, padaria, almoço" autocomplete="off" list="tSugg"><datalist id="tSugg">${[...new Set(S.tx.filter(t=>!t.demo).slice(-300).map(t=>cleanName(t.desc)))].slice(-60).map(d=>`<option value="${esc(d)}">`).join('')}</datalist></div>
+  <div class="field-row"><div class="field"><label for="tCat">Categoria</label><select id="tCat"><option value="" id="tAuto">Automática</option>${catOptions('')}</select></div>
+  <div class="field"><label for="tAcc">Conta</label><select id="tAcc">${accOpts}</select></div></div>
   <p id="tErr" style="color:var(--out);margin:0"></p>
-  <div class="dlg-act"><button class="btn" id="tCancel">Cancelar</button><button class="btn primary" id="tSave">Adicionar lançamento</button></div>`,()=>{
-    const setS=s=>{sign=s;$('#sOut').setAttribute('aria-pressed',s<0);$('#sIn').setAttribute('aria-pressed',s>0)};
+  <div class="dlg-act"><button class="btn" id="tCancel">Cancelar</button><button class="btn" id="tMore">Salvar e adicionar outro</button><button class="btn primary" id="tSave">Adicionar lançamento</button></div>`,()=>{
+    const hint=()=>{const d=$('#tDesc').value.trim();$('#tAuto').textContent=d?`Automática: ${CAT[categorize(d,sign)].name}`:'Automática'};
+    const setS=s=>{sign=s;$('#sOut').setAttribute('aria-pressed',s<0);$('#sIn').setAttribute('aria-pressed',s>0);hint()};
     $('#sOut').onclick=()=>setS(-1);$('#sIn').onclick=()=>setS(1);
+    $('#tDesc').oninput=hint;
     $('#tCancel').onclick=closeDlg;
-    $('#tSave').onclick=()=>{
+    const save=again=>{
       const desc=$('#tDesc').value.trim(),v=parseNum($('#tAmt').value),date=$('#tDate').value;
-      if(!desc||!isFinite(v)||v===0||!date){$('#tErr').textContent='Preencha descrição, valor e data.';return}
-      let accId;if(hasAcc)accId=$('#tAcc').value;else{const a={id:uid(),name:$('#tAccNew').value.trim()||'Carteira',type:'corrente',initial:0};S.accounts.push(a);accId=a.id}
+      if(!isFinite(v)||v===0){$('#tErr').textContent='Digite o valor.';$('#tAmt').focus();return}
+      if(!desc){$('#tErr').textContent='Digite uma descrição.';$('#tDesc').focus();return}
+      if(!date){$('#tErr').textContent='Escolha a data.';return}
+      let accId=$('#tAcc').value;
+      if(accId==='__cash'||!accId){const a={id:uid(),name:'Carteira',type:'dinheiro',initial:0};S.accounts.push(a);accId=a.id}
+      S.lastManualAcc=accId;
       const amt=round2(Math.abs(v)*sign);const c=$('#tCat').value;
       S.tx.push({id:uid(),acc:accId,date,amt,desc,cat:c||categorize(desc,amt),man:!!c});
-      persist();closeDlg();view.month=monthOf(date);render();toast('Lançamento adicionado');
+      persist();view.month=monthOf(date);render();toast(`${desc}: ${money(amt)} adicionado`);
+      if(again){closeDlg();openTxDialog()}else closeDlg();
     };
-    setTimeout(()=>$('#tDesc').focus(),30);
+    $('#tSave').onclick=()=>save(false);$('#tMore').onclick=()=>save(true);
+    $('#tAmt').onkeydown=e=>{if(e.key==='Enter')$('#tDesc').focus()};
+    $('#tDesc').onkeydown=e=>{if(e.key==='Enter')save(false)};
+    [$('#tAmt'),$('#tDesc')].forEach(i=>i.addEventListener('input',()=>$('#tErr').textContent=''));
+    setTimeout(()=>{const i=$('#tAmt');i&&i.focus()},30);
   });
 }
 function openAccDialog(){
   openDlg(`<h2>Nova conta</h2>
   <div class="field"><label for="aName">Nome</label><input id="aName" placeholder="Ex.: Itaú corrente"></div>
-  <div class="field-row"><div class="field"><label for="aType">Tipo</label><select id="aType"><option value="corrente">Conta corrente</option><option value="poupanca">Poupança</option><option value="cartao">Cartão de crédito</option></select></div>
+  <div class="field-row"><div class="field"><label for="aType">Tipo</label><select id="aType"><option value="corrente">Conta corrente</option><option value="poupanca">Poupança</option><option value="cartao">Cartão de crédito</option><option value="dinheiro">Dinheiro (carteira)</option></select></div>
   <div class="field"><label for="aBal">Saldo atual (R$)</label><input id="aBal" inputmode="decimal" placeholder="0,00"></div></div>
   <div class="dlg-act"><button class="btn" id="aCancel">Cancelar</button><button class="btn primary" id="aSave">Criar conta</button></div>`,()=>{
     $('#aCancel').onclick=closeDlg;
@@ -774,27 +809,38 @@ function openBalDialog(id){
 
 /* ---------- Importação ---------- */
 function pickFile(){const f=$('#file');f.value='';f.click()}
-$('#file').onchange=async e=>{
-  const file=e.target.files[0];if(!file)return;
+$('#file').onchange=e=>{const fs=[...e.target.files];if(fs.length)importFiles(fs)};
+async function parseFile(file){
+  const buf=await file.arrayBuffer();
+  const head=new TextDecoder('latin1').decode(buf.slice(0,8));
+  if(head.startsWith('%PDF')||/\.pdf$/i.test(file.name)){
+    toast('Lendo o PDF…');
+    const lines=await readPdf(buf);
+    if(lines.filter(l=>l.trim()).length<3)throw new Error('Este PDF parece ser uma imagem digitalizada, sem texto para ler.');
+    return parsePdfLines(lines);
+  }
+  let text=new TextDecoder('utf-8').decode(buf);
+  if(text.includes('\uFFFD'))text=new TextDecoder('windows-1252').decode(buf);
+  return /<OFX>|OFXHEADER|<STMTTRN>/i.test(text)?parseOFX(text):parseCSV(text);
+}
+let importing=false;
+async function importFiles(files){
+  if(importing){toast('Termine a importação em andamento primeiro');return}
+  importing=true;let total=0,done=0;
   try{
-    const buf=await file.arrayBuffer();
-    const head=new TextDecoder('latin1').decode(buf.slice(0,8));
-    let p;
-    if(head.startsWith('%PDF')||/\.pdf$/i.test(file.name)){
-      toast('Lendo o PDF…');
-      const lines=await readPdf(buf);
-      if(lines.filter(l=>l.trim()).length<3)throw new Error('Este PDF parece ser uma imagem digitalizada, sem texto para ler.');
-      p=parsePdfLines(lines);
-    } else {
-      let text=new TextDecoder('utf-8').decode(buf);
-      if(text.includes('\uFFFD'))text=new TextDecoder('windows-1252').decode(buf);
-      const isOfx=/<OFX>|OFXHEADER|<STMTTRN>/i.test(text);
-      p=isOfx?parseOFX(text):parseCSV(text);
+    for(let i=0;i<files.length;i++){
+      const f=files[i];let p;
+      try{p=await parseFile(f)}
+      catch(err){if(err&&err.message==='Importação cancelada.')continue;
+        await infoDlg('Não foi possível ler '+f.name,`<p>${esc(err.message||'Formato não reconhecido.')} Tente exportar o extrato em outro formato (PDF, OFX ou CSV).</p>`);continue}
+      if(!p.tx.length){await infoDlg('Nenhum lançamento encontrado',`<p>O arquivo <b>${esc(f.name)}</b> foi lido, mas não reconhecemos lançamentos nele. Confira se é o extrato em PDF, OFX ou CSV exportado pelo banco. Se for PDF, ele precisa ter texto selecionável (não pode ser foto ou digitalização).</p>`);continue}
+      p.fileName=f.name;p.step=files.length>1?`Arquivo ${i+1} de ${files.length}`:'';
+      const r=await openImportDialog(p);
+      if(r){total+=r.added;done++}
     }
-    if(!p.tx.length){openDlg(`<h2>Nenhum lançamento encontrado</h2><p>O arquivo <b>${esc(file.name)}</b> foi lido, mas não reconhecemos lançamentos nele. Confira se é o extrato em PDF, OFX ou CSV exportado pelo banco. Se for PDF, ele precisa ter texto selecionável (não pode ser foto ou digitalização).</p><div class="dlg-act"><button class="btn primary" onclick="document.getElementById('dlg').close()">Entendi</button></div>`);return}
-    p.fileName=file.name;openImportDialog(p);
-  }catch(err){console.error(err);openDlg(`<h2>Não foi possível ler o arquivo</h2><p>${esc(err.message||'Formato não reconhecido.')} Tente exportar o extrato em outro formato (PDF, OFX ou CSV).</p><div class="dlg-act"><button class="btn primary" onclick="document.getElementById('dlg').close()">Entendi</button></div>`)}
-};
+  } finally {importing=false}
+  if(files.length>1&&done)toast(`${done} arquivo${done>1?'s':''} importado${done>1?'s':''} · ${total} lançamento${total===1?'':'s'} novo${total===1?'':'s'}`);
+}
 function parseNum(s){
   if(typeof s==='number')return s;s=String(s??'').trim();if(!s)return NaN;
   let neg=/-/.test(s)||/^\(.*\)$/.test(s)||/\bD\s*$/i.test(s);
@@ -959,13 +1005,15 @@ function parsePdfLines(lines){
   return {format:'PDF',isCard,bank:'',acctid:'',tx,balance:isCard?null:lastBal,balDate:isCard?null:(lastBalDate&&lastBalDate<=todayISO()?lastBalDate:null)};
 }
 
-function openImportDialog(p){
+function openImportDialog(p){return new Promise(resolve=>{
   const dates=p.tx.map(t=>t.date).sort();
-  const match=S.accounts.find(a=>p.acctid&&a.acctid===p.acctid);
+  const same=S.accounts.filter(a=>!a.demo&&a.type!=='dinheiro'&&((a.type==='cartao')===!!p.isCard));
+  const sameFmt=same.filter(a=>a.lastFormat===p.format);
+  const match=S.accounts.find(a=>p.acctid&&a.acctid===p.acctid)||(same.length===1?same[0]:sameFmt.length===1?sameFmt[0]:null);
   const defType=p.isCard?'cartao':'corrente';
   const defName=p.bank?cleanName(p.bank)+' '+(p.isCard?'cartão':'conta')+(p.acctid?' '+p.acctid.slice(-4):''):(p.isCard?'Cartão de crédito':'Conta corrente');
   const inc=p.tx.filter(t=>t.amt>0).reduce((s,t)=>s+t.amt,0),out=p.tx.filter(t=>t.amt<0).reduce((s,t)=>s-t.amt,0);
-  openDlg(`<h2>Importar ${esc(p.fileName)}</h2>
+  openDlg(`${p.step?`<p class="muted" style="margin:0 0 4px;font-size:13px">${p.step}</p>`:''}<h2>Importar ${esc(p.fileName)}</h2>
   <div class="summary num">
     <div><span>Formato</span><b>${p.format}${p.isCard?' · cartão de crédito':''}</b></div>
     <div><span>Lançamentos</span><b>${p.tx.length}</b></div>
@@ -983,7 +1031,7 @@ function openImportDialog(p){
     <p class="muted" style="font-size:13px;margin:0 0 6px">Desmarque o que não for lançamento e toque no valor para trocar entre entrada e saída.${p.tx.some(t=>t.guess)?' Os marcados com ? tiveram o sinal deduzido pela descrição.':''}</p>
     <div class="review" id="rev">${p.tx.map((t,i)=>`<div class="rv"><input type="checkbox" data-i="${i}" checked aria-label="Importar ${esc(t.desc)}"><span class="muted num">${fmtDate(t.date).slice(0,5)}</span><span class="rv-d" title="${esc(t.desc)}">${esc(cleanName(t.desc))}</span><button type="button" class="rv-a num ${t.amt>0?'pos':''}" data-s="${i}">${t.guess?'? ':''}${money(t.amt)}</button></div>`).join('')}</div></div>`:''}
   <p class="muted" style="font-size:13px;margin:0">Lançamentos já importados antes são ignorados automaticamente.${p.balance!=null?' O saldo do arquivo será usado para conferir a conta.':''}</p>
-  <div class="dlg-act"><button class="btn" id="iCancel">Cancelar</button><button class="btn primary" id="iGo">Importar ${p.tx.length} lançamentos</button></div>`,()=>{
+  <div class="dlg-act"><button class="btn" id="iCancel">${p.step?'Pular arquivo':'Cancelar'}</button><button class="btn primary" id="iGo">Importar ${p.tx.length} lançamentos</button></div>`,()=>{
     const sync=()=>{$('#newBox').hidden=$('#iAcc').value!=='__new'};sync();$('#iAcc').onchange=sync;
     const cnt=()=>{const n=p.tx.filter(t=>!t.skip).length;$('#iGo').textContent=`Importar ${n} lançamento${n===1?'':'s'}`;$('#iGo').disabled=!n};
     dlg.querySelectorAll('#rev input[data-i]').forEach(c=>c.onchange=()=>{p.tx[c.dataset.i].skip=!c.checked;cnt()});
@@ -999,11 +1047,13 @@ function openImportDialog(p){
       } else acc=S.accounts.find(a=>a.id===$('#iAcc').value);
       if(p.balance!=null&&p.balDate){acc.anchorAmt=p.balance;acc.anchorDate=p.balDate}
       const r=importTx(acc,p.tx.filter(t=>!t.skip));
-      persist();closeDlg();view.month=monthOf(dates[dates.length-1]);pickDefaultMonth();view.tab='resumo';render();
+      acc.imported=true;acc.lastImport=todayISO();acc.lastFormat=p.format;
+      persist();view.month=monthOf(dates[dates.length-1]);pickDefaultMonth();view.tab='resumo';render();
       toast(`${r.added} lançamento${r.added===1?'':'s'} importado${r.added===1?'':'s'}${r.skipped?` · ${r.skipped} já existia${r.skipped===1?'':'m'}`:''}`);
+      resolve(r);closeDlg();
     };
-  });
-}
+  },()=>resolve(null));
+})}
 function importTx(acc,list){
   const ck=t=>t.date+'|'+t.amt.toFixed(2)+'|'+norm(t.desc).replace(/\s+/g,' ');
   const F={},C={},A={};const inc=(o,k)=>o[k]=(o[k]||0)+1;
@@ -1061,6 +1111,18 @@ function removeDemo(){
 /* ---------- Toast e início ---------- */
 let toastT;function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2800)}
 $('#btnImport').onclick=pickFile;
+$('#fab').onclick=()=>openTxDialog();
+async function checkShared(){
+  if(!new URLSearchParams(location.search).has('compartilhado'))return;
+  history.replaceState(null,'',location.pathname);
+  try{
+    const c=await caches.open('caixa-share');
+    const keys=(await c.keys()).sort((a,b)=>Number(a.url.split('/').pop())-Number(b.url.split('/').pop()));
+    const files=[];
+    for(const k of keys){const r=await c.match(k);const b=await r.blob();files.push(new File([b],decodeURIComponent(r.headers.get('X-File-Name')||'extrato'),{type:b.type}));await c.delete(k)}
+    if(files.length)importFiles(files);else toast('Nenhum arquivo recebido. Tente compartilhar de novo.');
+  }catch(e){toast('Não foi possível receber o arquivo compartilhado.')}
+}
 /* ---------- Cópia de segurança ---------- */
 function exportBackup(){
   const d=todayISO();S.lastBackup=d;persist();
@@ -1090,7 +1152,7 @@ $('#btnInstall').onclick=async()=>{
   openDlg(`<h2>Instalar no iPhone</h2><ol class="steps"><li>Abra este endereço no <b>Safari</b>.</li><li>Toque em <b>Compartilhar</b> (quadrado com seta para cima).</li><li>Escolha <b>Adicionar à Tela de Início</b> e confirme.</li></ol><div class="dlg-act"><button class="btn primary" id="okIos">Entendi</button></div>`,()=>$('#okIos').onclick=closeDlg);
 };
 if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
-initStore();
+initStore().then(checkShared);
 </script>
 </body>
 </html>

@@ -1,17 +1,35 @@
 // Caixa: funciona offline. Ao mudar arquivos do app, aumente a VERSAO.
-const VERSAO = 'caixa-v2';
+const VERSAO = 'caixa-v3';
 const ARQUIVOS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSAO).then(c => c.addAll(ARQUIVOS)).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSAO && k !== 'caixa-fontes').map(k => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSAO && k !== 'caixa-fontes' && k !== 'caixa-share').map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 self.addEventListener('fetch', e => {
   const req = e.request;
-  if (req.method !== 'GET') return;
   const url = new URL(req.url);
+  // Arquivo compartilhado de outro app (ex.: extrato do banco)
+  if (req.method === 'POST' && url.origin === location.origin && url.pathname.endsWith('/share')) {
+    e.respondWith((async () => {
+      try {
+        const fd = await req.formData();
+        const files = fd.getAll('files').filter(f => f && typeof f !== 'string');
+        const c = await caches.open('caixa-share');
+        for (const k of await c.keys()) await c.delete(k);
+        let i = 0;
+        for (const f of files) {
+          await c.put(new Request(new URL('./compartilhado/' + (i++), self.registration.scope).href),
+            new Response(f, { headers: { 'Content-Type': f.type || 'application/octet-stream', 'X-File-Name': encodeURIComponent(f.name || ('extrato-' + i)) } }));
+        }
+      } catch (err) {}
+      return Response.redirect(new URL('./?compartilhado=1', self.registration.scope).href, 303);
+    })());
+    return;
+  }
+  if (req.method !== 'GET') return;
   // Fontes do Google: guarda uma cópia para usar offline
   if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
     e.respondWith(caches.open('caixa-fontes').then(async c => {
