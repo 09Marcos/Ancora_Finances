@@ -1985,14 +1985,25 @@ function showNoConfig(){
   hideApp();
   lockScreen(`<h1>Falta conectar a conta</h1>
     <p class="lock-msg">Para entrar com e-mail e senha e ver os mesmos dados no celular e no computador, o arquivo <b>firebase-config.js</b> precisa ser preenchido.</p>
-    <div class="setup-form"><button class="btn" id="ncLocal">Usar só neste aparelho por enquanto</button></div>`);
+    <div class="setup-form"><button class="btn primary" id="ncFix">Atualizar o app</button><button class="btn" id="ncLocal">Usar só neste aparelho por enquanto</button></div>
+    <p class="setup-note">Seus dados deste aparelho não são apagados ao atualizar.</p>`);
+  $('#ncFix').onclick=refreshApp;
   $('#ncLocal').onclick=()=>{FB.mode='local';const local=loadLocal();if(local)S={accounts:[],budgets:{},rules:{},fixed:[],...local};setStatus(hasData()?'local':'');pickDefaultMonth();unlock()};
+}
+async function refreshApp(){
+  try{if(navigator.serviceWorker){const rs=await navigator.serviceWorker.getRegistrations();for(const r of rs)await r.unregister()}}catch(e){}
+  try{if(window.caches){for(const k of await caches.keys())if(k!=='caixa-share')await caches.delete(k)}}catch(e){}
+  location.replace(location.pathname+'?atualizado='+Date.now());
 }
 function loadScriptOnce(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error(src));document.head.appendChild(s)})}
 async function boot(){
   hideApp();lockScreen(`<h1>Âncora <span class="logo-sub">Finances</span></h1><p class="lock-msg">Carregando…</p>`);
+  const okCfg=c=>!!(c&&c.apiKey&&!/COLE|AQUI/i.test(c.apiKey));
+  if(!okCfg(window.ANCORA_FIREBASE)){
+    try{await loadScriptOnce('firebase-config.js?v='+Date.now())}catch(e){}
+  }
   const cfg=window.ANCORA_FIREBASE;
-  if(!cfg||!cfg.apiKey||/COLE|AQUI/i.test(cfg.apiKey)){showNoConfig();return}
+  if(!okCfg(cfg)){showNoConfig();return}
   try{
     if(!(window.firebase&&firebase.firestore)){for(const f of ['firebase-app-compat.js','firebase-auth-compat.js','firebase-firestore-compat.js'])await loadScriptOnce(f)}
     if(!firebase.apps.length)firebase.initializeApp(cfg);
