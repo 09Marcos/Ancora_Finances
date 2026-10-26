@@ -266,7 +266,7 @@ const EXP_CATS = CATS.filter(c=>c.kind==='gasto');
 
 const KW_NEUTRAL = [
   ['fatura',[' pagamento de fatura',' pagamento fatura',' pgto fatura',' pag fatura',' pagamento recebido',' fatura cartao',' pagto cartao',' pag cartao']],
-  ['interna',[' transferencia entre contas',' mesma titularidade',' entre contas',' transf mesma tit']],
+  ['interna',[' reserva por',' dinheiro reservado',' caixinha',' cofrinho',' transferencia entre contas',' mesma titularidade',' entre contas',' transf mesma tit']],
   ['investimentos',[' aplicacao',' resgate',' cdb',' rdb ',' tesouro direto',' investimento',' corretora',' lci ',' lca ',' poupanca']],
 ];
 const KW_INCOME = [['renda',[' salario',' folha de pagamento',' proventos',' remuneracao',' pro labore',' prolabore',' pagto salario']]];
@@ -956,36 +956,50 @@ function parsePdfLines(lines){
   const isCard=/fatura/.test(full)&&/(vencimento|limite)/.test(full)&&!/saldo anterior/.test(full);
   const yc={};for(const m of full.matchAll(/\b(20[2-3]\d)\b/g))yc[m[1]]=(yc[m[1]]||0)+1;
   const defYear=Number(Object.entries(yc).sort((a,b)=>b[1]-a[1])[0]?.[0])||new Date().getFullYear();
-  let refMonth=0;for(const m of full.matchAll(/\b\d{2}\/(\d{2})\/(\d{4})\b/g))if(Number(m[2])===defYear)refMonth=Math.max(refMonth,Number(m[1]));
+  let refMonth=0;for(const m of full.matchAll(/\b\d{2}[\/\-.](\d{2})[\/\-.](\d{4})\b/g))if(Number(m[2])===defYear)refMonth=Math.max(refMonth,Number(m[1]));
   for(const m of full.matchAll(/\b(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)[a-z]*\.?\s*(?:de\s+)?(\d{4})\b/g))if(Number(m[2])===defYear)refMonth=Math.max(refMonth,MESES[m[1]]);
   const mkDate=(d,mo,y)=>{d=Number(d);mo=Number(mo);if(!d||!mo||d>31||mo>12)return null;
     if(!y){y=defYear;if(refMonth&&mo>refMonth+1)y--}else{y=Number(y);if(y<100)y+=2000}
     return `${y}-${pad(mo)}-${pad(d)}`};
-  const DATE1=/^\s*(\d{2})\/(\d{2})(?:\/(\d{2,4}))?(?![\d\/])/;
+  const DATE1=/^\s*(\d{2})([\/\-.])(\d{2})(?:\2(\d{2,4}))?(?![\d\/\-.]*\d)/;
   const DATE2=/^\s*(\d{1,2})\s*(?:de\s+)?(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)[a-zç]*\.?(?:\s+(?:de\s+)?(\d{4}))?(?![a-z])/i;
   const SKIP=/\bsaldo\b|\btotal\b|resumo|limite|pagamento minimo|valor minimo|\bcet\b|vencimento|encargos rotativ|melhor dia|juros do rotativo|^pagina|^data\b/;
-  const out=[];let cur=null,section=0,prevBal=null,lastBal=null,lastBalDate=null,lastIdx=-9;
+  const out=[];let cur=null,section=0,prevBal=null,lastBal=null,lastBalDate=null,pend=[];
+  const clean=t=>t.replace(/R\$/g,' ').replace(/\b\d{8,}\b/g,' ').replace(/\s+/g,' ').replace(/^[\s\-–—−|:]+|[\s\-–—−|:]+$/g,'').trim();
+  const flushPend=next=>{
+    const prev=out[out.length-1];let head=[];
+    if(pend.length){
+      if(next&&!next.desc){
+        if(prev&&prev.wantsTail){const k=Math.ceil(pend.length/2);prev.desc+=' '+pend.slice(0,k).join(' ');head=pend.slice(k)}else head=pend;
+      } else if(prev) prev.desc+=' '+pend.join(' ');
+    }
+    if(next&&!next.desc){next.desc=head.join(' ');next.wantsTail=true}
+    pend=[];
+  };
   lines.forEach((raw,idx)=>{
     let l=raw.replace(/\u00a0/g,' ').trim();if(!l)return;
     let n=norm(l),rest=l,hadDate=false,m;
     if(/total de saidas|saidas\s*$|^saidas\b/.test(n)&&!/entradas/.test(n))section=-1;
     if(/total de entradas|entradas\s*$|^entradas\b/.test(n)&&!/saidas/.test(n))section=1;
-    if((m=l.match(DATE1))){const dt=mkDate(m[1],m[2],m[3]);if(dt){cur=dt;rest=l.slice(m[0].length);hadDate=true}}
+    if((m=l.match(DATE1))){const dt=mkDate(m[1],m[3],m[4]);if(dt){cur=dt;rest=l.slice(m[0].length);hadDate=true}}
     else if((m=l.match(DATE2))){const dt=mkDate(m[1],MESES[norm(m[2]).slice(0,3)],m[3]);if(dt){cur=dt;rest=l.slice(m[0].length);hadDate=true}}
     // segunda data na linha (ex.: data do lançamento + data do valor)
-    const m2=rest.match(/^\s*\d{2}\/\d{2}(?:\/\d{2,4})?(?![\d\/])/);if(hadDate&&m2)rest=rest.slice(m2[0].length);
+    const m2=rest.match(/^\s*\d{2}([\/\-.])\d{2}(?:\1\d{2,4})?(?![\d\/\-.]*\d)/);if(hadDate&&m2)rest=rest.slice(m2[0].length);
     const nr=norm(rest);
     const amts=[...rest.matchAll(AMT_RE)].map(a=>{const sg=(a[1]||'')+(a[2]||'');return {raw:a[0],v:parseNum(a[3]),neg:/[-−–]/.test(sg)||!!(a[4]&&/[-−–D]/.test(a[4])),pos:/\+/.test(sg)||!!(a[4]&&/C/.test(a[4]))}});
-    if(/\bsaldo\b|\bs a l d o\b/.test(n)){if(amts.length&&!isCard){const a=amts[amts.length-1];prevBal=a.neg?-a.v:a.v;lastBal=prevBal;lastBalDate=cur}return}
-    if(!cur)return;
+    if(/\bsaldo\b|\bs a l d o\b/.test(n)){flushPend(null);if(amts.length&&!isCard){const a=amts[amts.length-1];prevBal=a.neg?-a.v:a.v;lastBal=prevBal;lastBalDate=cur}return}
     if(!amts.length){
-      if(!hadDate&&lastIdx===idx-1&&out.length&&rest.length<70&&!SKIP.test(nr)&&/[a-z]/i.test(rest)&&!/^(pix|cpf|cnpj|agencia|conta)\b/.test(nr.trim())){out[out.length-1].desc+=' '+rest.replace(/\s+/g,' ').trim();lastIdx=idx}
-      else if(!hadDate&&lastIdx===idx-1&&out.length&&/^(cpf|cnpj)/.test(nr.trim())){lastIdx=idx}
+      if(SKIP.test(n)){flushPend(null);return}
+      const t=clean(rest);
+      if(!hadDate&&t.length>=2&&t.length<80&&/[a-z]/i.test(t)&&!/^(cpf|cnpj|agencia|conta)\b/.test(norm(t))){pend.push(t);if(pend.length>4)pend.shift()}
       return}
-    if(SKIP.test(nr))return;
+    if(!cur){pend=[];return}
+    if(SKIP.test(nr)){flushPend(null);return}
     let desc=rest;for(const a of amts)desc=desc.replace(a.raw,' ');
-    desc=desc.replace(/R\$/g,' ').replace(/\s+/g,' ').replace(/^[\s\-–—−|:]+|[\s\-–—−|:]+$/g,'').trim();
-    if(desc.length<2||!/[a-z]/i.test(desc))return;
+    desc=clean(desc);
+    if(desc&&(desc.length<2||!/[a-z]/i.test(desc)))desc='';
+    const holder={desc};flushPend(holder);desc=holder.desc;const wantsTail=!!holder.wantsTail;
+    if(desc.length<2){if(!hadDate)return;desc=holder.desc||''}
     const a=amts[0];let sign=0,guess=false;
     if(isCard){
       if(/pagamento|estorno|credito|reembolso|cashback|devolucao/.test(norm(desc)))sign=1;
@@ -999,8 +1013,10 @@ function parsePdfLines(lines){
       if(!sign&&section)sign=section;
       if(!sign){guess=true;sign=/recebid|salario|deposito|credito|estorno|rendimento|resgate|reembolso|devolucao|\bted recebida|transferencia recebida/.test(norm(desc))?1:-1}
     }
-    out.push({date:cur,amt:round2(sign*a.v),desc,guess});lastIdx=idx;
+    out.push({date:cur,amt:round2(sign*a.v),desc,guess,wantsTail});
   });
+  flushPend(null);
+  out.forEach(t=>{t.desc=t.desc.replace(/\s+/g,' ').trim()||'Lançamento';delete t.wantsTail});
   const tx=out.filter(t=>t.amt!==0&&isFinite(t.amt));
   return {format:'PDF',isCard,bank:'',acctid:'',tx,balance:isCard?null:lastBal,balDate:isCard?null:(lastBalDate&&lastBalDate<=todayISO()?lastBalDate:null)};
 }

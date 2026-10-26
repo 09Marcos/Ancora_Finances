@@ -1,5 +1,5 @@
 // Âncora Finances: funciona offline. Ao mudar arquivos do app, aumente a VERSAO.
-const VERSAO = 'caixa-v4';
+const VERSAO = 'caixa-v5';
 const ARQUIVOS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
