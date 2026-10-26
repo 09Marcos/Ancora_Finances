@@ -1,5 +1,5 @@
 // Caixa: funciona offline. Ao mudar arquivos do app, aumente a VERSAO.
-const VERSAO = 'caixa-v1';
+const VERSAO = 'caixa-v2';
 const ARQUIVOS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
@@ -28,5 +28,5 @@ self.addEventListener('fetch', e => {
       .catch(() => caches.match('./index.html')));
     return;
   }
-  e.respondWith(caches.match(req).then(hit => hit || fetch(req)));
+  e.respondWith(caches.match(req).then(hit => hit || fetch(req).then(r => { if (r.ok) { const cp = r.clone(); caches.open(VERSAO).then(c => c.put(req, cp)); } return r; })));
 });

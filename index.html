@@ -192,6 +192,12 @@ dialog::backdrop{background:rgba(10,16,24,.45)}
 .dlg-act{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;flex-wrap:wrap}
 .summary{background:var(--surface-2);border-radius:10px;padding:12px 14px;font-size:14px;margin-bottom:14px}
 .summary div{display:flex;justify-content:space-between;gap:12px;padding:2px 0}
+.review{max-height:42vh;overflow:auto;border:1px solid var(--line);border-radius:10px}
+.rv{display:grid;grid-template-columns:auto 44px minmax(0,1fr) auto;gap:8px;align-items:center;padding:6px 10px;border-bottom:1px solid var(--line);font-size:13px}
+.rv:last-child{border-bottom:0}
+.rv-d{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rv-a{border:1px solid var(--line);background:var(--surface-2);border-radius:7px;padding:3px 8px;cursor:pointer;font-weight:600;white-space:nowrap}
+.rv-a.pos{color:var(--in)}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
 .seg button{border:0;background:var(--surface);padding:8px 14px;cursor:pointer;font-weight:600}
 .seg button[aria-pressed="true"]{background:var(--brand);color:var(--brand-ink)}
@@ -223,7 +229,7 @@ dialog::backdrop{background:rgba(10,16,24,.45)}
   </div>
 </header>
 <main id="app"><p class="muted">Carregando…</p></main>
-<input type="file" id="file" accept=".ofx,.qfx,.csv,.txt" hidden>
+<input type="file" id="file" accept=".ofx,.qfx,.csv,.txt,.pdf,application/pdf" hidden>
 <input type="file" id="bkFile" accept=".json,application/json" hidden>
 <dialog id="dlg"></dialog>
 <div class="toast" aria-live="polite"><div id="toast"></div></div>
@@ -678,7 +684,7 @@ function contasHTML(){
     <h2>Como trazer os dados do seu banco</h2>
     <ol class="steps">
       <li>No app ou internet banking, abra o <b>extrato</b> da conta ou a <b>fatura</b> do cartão.</li>
-      <li>Procure a opção <b>Exportar</b>, <b>Baixar</b> ou <b>Compartilhar</b> e escolha <b>OFX</b> (Money) ou, se não houver, <b>CSV</b> (Excel).</li>
+      <li>Procure a opção <b>Exportar</b>, <b>Baixar</b> ou <b>Compartilhar</b> e escolha <b>OFX</b> (Money), <b>CSV</b> (Excel) ou <b>PDF</b>. O OFX é o mais preciso; no PDF você confere os lançamentos antes de importar.</li>
       <li>Toque em <b>Importar extrato</b> e escolha o arquivo. Lançamentos repetidos são ignorados, então pode importar períodos que se sobrepõem.</li>
     </ol>
     <button class="btn primary" id="cImport" style="margin-top:8px">Importar extrato</button>
@@ -771,13 +777,23 @@ function pickFile(){const f=$('#file');f.value='';f.click()}
 $('#file').onchange=async e=>{
   const file=e.target.files[0];if(!file)return;
   try{
-    const buf=await file.arrayBuffer();let text=new TextDecoder('utf-8').decode(buf);
-    if(text.includes('\uFFFD'))text=new TextDecoder('windows-1252').decode(buf);
-    const isOfx=/<OFX>|OFXHEADER|<STMTTRN>/i.test(text);
-    const p=isOfx?parseOFX(text):parseCSV(text);
-    if(!p.tx.length){openDlg(`<h2>Nenhum lançamento encontrado</h2><p>O arquivo <b>${esc(file.name)}</b> foi lido, mas não reconhecemos lançamentos nele. Confira se é o extrato em OFX ou CSV exportado pelo banco (planilhas .xlsx e PDF não são lidas).</p><div class="dlg-act"><button class="btn primary" onclick="document.getElementById('dlg').close()">Entendi</button></div>`);return}
+    const buf=await file.arrayBuffer();
+    const head=new TextDecoder('latin1').decode(buf.slice(0,8));
+    let p;
+    if(head.startsWith('%PDF')||/\.pdf$/i.test(file.name)){
+      toast('Lendo o PDF…');
+      const lines=await readPdf(buf);
+      if(lines.filter(l=>l.trim()).length<3)throw new Error('Este PDF parece ser uma imagem digitalizada, sem texto para ler.');
+      p=parsePdfLines(lines);
+    } else {
+      let text=new TextDecoder('utf-8').decode(buf);
+      if(text.includes('\uFFFD'))text=new TextDecoder('windows-1252').decode(buf);
+      const isOfx=/<OFX>|OFXHEADER|<STMTTRN>/i.test(text);
+      p=isOfx?parseOFX(text):parseCSV(text);
+    }
+    if(!p.tx.length){openDlg(`<h2>Nenhum lançamento encontrado</h2><p>O arquivo <b>${esc(file.name)}</b> foi lido, mas não reconhecemos lançamentos nele. Confira se é o extrato em PDF, OFX ou CSV exportado pelo banco. Se for PDF, ele precisa ter texto selecionável (não pode ser foto ou digitalização).</p><div class="dlg-act"><button class="btn primary" onclick="document.getElementById('dlg').close()">Entendi</button></div>`);return}
     p.fileName=file.name;openImportDialog(p);
-  }catch(err){console.error(err);openDlg(`<h2>Não foi possível ler o arquivo</h2><p>${esc(err.message||'Formato não reconhecido.')} Exporte o extrato em OFX ou CSV e tente de novo.</p><div class="dlg-act"><button class="btn primary" onclick="document.getElementById('dlg').close()">Entendi</button></div>`)}
+  }catch(err){console.error(err);openDlg(`<h2>Não foi possível ler o arquivo</h2><p>${esc(err.message||'Formato não reconhecido.')} Tente exportar o extrato em outro formato (PDF, OFX ou CSV).</p><div class="dlg-act"><button class="btn primary" onclick="document.getElementById('dlg').close()">Entendi</button></div>`)}
 };
 function parseNum(s){
   if(typeof s==='number')return s;s=String(s??'').trim();if(!s)return NaN;
@@ -851,11 +867,103 @@ function parseCSV(text){
   }
   return {format:'CSV',isCard:cardStyle,bank:'',acctid:'',tx,balance:null,balDate:null};
 }
+/* ---------- PDF ---------- */
+async function loadPdfJs(){
+  if(window.pdfjsLib)return window.pdfjsLib;
+  await new Promise((res,rej)=>{const s=document.createElement('script');s.src='pdf.min.js';s.onload=res;s.onerror=()=>rej(new Error('Não foi possível carregar o leitor de PDF. Abra o app com internet uma vez e tente de novo.'));document.head.appendChild(s)});
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc='pdf.worker.min.js';
+  return window.pdfjsLib;
+}
+async function pdfToLines(buf,password){
+  const lib=await loadPdfJs();
+  const doc=await lib.getDocument({data:new Uint8Array(buf.slice(0)),password:password||undefined}).promise;
+  const lines=[];
+  for(let p=1;p<=doc.numPages;p++){
+    const page=await doc.getPage(p);const tc=await page.getTextContent();const rows=[];
+    for(const it of tc.items){if(!it.str||!it.str.trim())continue;
+      const x=it.transform[4],y=it.transform[5],h=Math.abs(it.transform[3])||8;
+      let r=rows.find(r=>Math.abs(r.y-y)<=Math.max(2,h*.45));if(!r){r={y,items:[]};rows.push(r)}
+      r.items.push({x,s:it.str,w:it.width||0})}
+    rows.sort((a,b)=>b.y-a.y);
+    for(const r of rows){r.items.sort((a,b)=>a.x-b.x);let s='',end=null;
+      for(const it of r.items){if(end!==null){const gap=it.x-end;s+=gap>6?'   ':gap>0.8?' ':''}s+=it.s;end=it.x+it.w}
+      lines.push(s.replace(/\s+$/,''))}
+  }
+  return lines;
+}
+async function readPdf(buf){
+  let pw='';
+  for(let tries=0;tries<4;tries++){
+    try{return await pdfToLines(buf,pw)}
+    catch(e){
+      if(e&&e.name==='PasswordException'){
+        const v=await askText(e.code===2?'Senha incorreta':'Este PDF tem senha',e.code===2?'Tente de novo. Muitos bancos usam os primeiros dígitos do CPF.':'Digite a senha do PDF. Muitos bancos usam os primeiros dígitos do CPF.','','Abrir PDF');
+        if(v===null)throw new Error('Importação cancelada.');pw=v;continue}
+      throw e}
+  }
+  throw new Error('Senha incorreta.');
+}
+const MESES={jan:1,fev:2,mar:3,abr:4,mai:5,jun:6,jul:7,ago:8,set:9,out:10,nov:11,dez:12};
+const AMT_RE=/([+\-−–]\s?)?(?:R\$\s*)?([+\-−–]\s?)?(\d{1,3}(?:\.\d{3})+,\d{2}|\d+,\d{2})(\s?[-−–](?!\s?\d)|\s?[DC](?![A-Za-zÀ-ú]))?/g;
+function parsePdfLines(lines){
+  const full=norm(lines.join('\n'));
+  const isCard=/fatura/.test(full)&&/(vencimento|limite)/.test(full)&&!/saldo anterior/.test(full);
+  const yc={};for(const m of full.matchAll(/\b(20[2-3]\d)\b/g))yc[m[1]]=(yc[m[1]]||0)+1;
+  const defYear=Number(Object.entries(yc).sort((a,b)=>b[1]-a[1])[0]?.[0])||new Date().getFullYear();
+  let refMonth=0;for(const m of full.matchAll(/\b\d{2}\/(\d{2})\/(\d{4})\b/g))if(Number(m[2])===defYear)refMonth=Math.max(refMonth,Number(m[1]));
+  for(const m of full.matchAll(/\b(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)[a-z]*\.?\s*(?:de\s+)?(\d{4})\b/g))if(Number(m[2])===defYear)refMonth=Math.max(refMonth,MESES[m[1]]);
+  const mkDate=(d,mo,y)=>{d=Number(d);mo=Number(mo);if(!d||!mo||d>31||mo>12)return null;
+    if(!y){y=defYear;if(refMonth&&mo>refMonth+1)y--}else{y=Number(y);if(y<100)y+=2000}
+    return `${y}-${pad(mo)}-${pad(d)}`};
+  const DATE1=/^\s*(\d{2})\/(\d{2})(?:\/(\d{2,4}))?(?![\d\/])/;
+  const DATE2=/^\s*(\d{1,2})\s*(?:de\s+)?(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)[a-zç]*\.?(?:\s+(?:de\s+)?(\d{4}))?(?![a-z])/i;
+  const SKIP=/\bsaldo\b|\btotal\b|resumo|limite|pagamento minimo|valor minimo|\bcet\b|vencimento|encargos rotativ|melhor dia|juros do rotativo|^pagina|^data\b/;
+  const out=[];let cur=null,section=0,prevBal=null,lastBal=null,lastBalDate=null,lastIdx=-9;
+  lines.forEach((raw,idx)=>{
+    let l=raw.replace(/\u00a0/g,' ').trim();if(!l)return;
+    let n=norm(l),rest=l,hadDate=false,m;
+    if(/total de saidas|saidas\s*$|^saidas\b/.test(n)&&!/entradas/.test(n))section=-1;
+    if(/total de entradas|entradas\s*$|^entradas\b/.test(n)&&!/saidas/.test(n))section=1;
+    if((m=l.match(DATE1))){const dt=mkDate(m[1],m[2],m[3]);if(dt){cur=dt;rest=l.slice(m[0].length);hadDate=true}}
+    else if((m=l.match(DATE2))){const dt=mkDate(m[1],MESES[norm(m[2]).slice(0,3)],m[3]);if(dt){cur=dt;rest=l.slice(m[0].length);hadDate=true}}
+    // segunda data na linha (ex.: data do lançamento + data do valor)
+    const m2=rest.match(/^\s*\d{2}\/\d{2}(?:\/\d{2,4})?(?![\d\/])/);if(hadDate&&m2)rest=rest.slice(m2[0].length);
+    const nr=norm(rest);
+    const amts=[...rest.matchAll(AMT_RE)].map(a=>{const sg=(a[1]||'')+(a[2]||'');return {raw:a[0],v:parseNum(a[3]),neg:/[-−–]/.test(sg)||!!(a[4]&&/[-−–D]/.test(a[4])),pos:/\+/.test(sg)||!!(a[4]&&/C/.test(a[4]))}});
+    if(/\bsaldo\b|\bs a l d o\b/.test(n)){if(amts.length&&!isCard){const a=amts[amts.length-1];prevBal=a.neg?-a.v:a.v;lastBal=prevBal;lastBalDate=cur}return}
+    if(!cur)return;
+    if(!amts.length){
+      if(!hadDate&&lastIdx===idx-1&&out.length&&rest.length<70&&!SKIP.test(nr)&&/[a-z]/i.test(rest)&&!/^(pix|cpf|cnpj|agencia|conta)\b/.test(nr.trim())){out[out.length-1].desc+=' '+rest.replace(/\s+/g,' ').trim();lastIdx=idx}
+      else if(!hadDate&&lastIdx===idx-1&&out.length&&/^(cpf|cnpj)/.test(nr.trim())){lastIdx=idx}
+      return}
+    if(SKIP.test(nr))return;
+    let desc=rest;for(const a of amts)desc=desc.replace(a.raw,' ');
+    desc=desc.replace(/R\$/g,' ').replace(/\s+/g,' ').replace(/^[\s\-–—−|:]+|[\s\-–—−|:]+$/g,'').trim();
+    if(desc.length<2||!/[a-z]/i.test(desc))return;
+    const a=amts[0];let sign=0,guess=false;
+    if(isCard){
+      if(/pagamento|estorno|credito|reembolso|cashback|devolucao/.test(norm(desc)))sign=1;
+      else sign=a.neg?1:-1;
+    } else {
+      if(a.neg)sign=-1;else if(a.pos)sign=1;
+      if(amts.length>=2){const b=amts[amts.length-1];const bal=b.neg?-b.v:b.v;
+        if(!sign&&prevBal!=null){if(Math.abs(prevBal+a.v-bal)<0.02)sign=1;else if(Math.abs(prevBal-a.v-bal)<0.02)sign=-1}
+        prevBal=bal;lastBal=bal;lastBalDate=cur}
+      else if(prevBal!=null&&sign)prevBal=round2(prevBal+sign*a.v);
+      if(!sign&&section)sign=section;
+      if(!sign){guess=true;sign=/recebid|salario|deposito|credito|estorno|rendimento|resgate|reembolso|devolucao|\bted recebida|transferencia recebida/.test(norm(desc))?1:-1}
+    }
+    out.push({date:cur,amt:round2(sign*a.v),desc,guess});lastIdx=idx;
+  });
+  const tx=out.filter(t=>t.amt!==0&&isFinite(t.amt));
+  return {format:'PDF',isCard,bank:'',acctid:'',tx,balance:isCard?null:lastBal,balDate:isCard?null:(lastBalDate&&lastBalDate<=todayISO()?lastBalDate:null)};
+}
+
 function openImportDialog(p){
   const dates=p.tx.map(t=>t.date).sort();
   const match=S.accounts.find(a=>p.acctid&&a.acctid===p.acctid);
   const defType=p.isCard?'cartao':'corrente';
-  const defName=(p.bank?cleanName(p.bank)+' ':'')+(p.isCard?'cartão':'conta')+(p.acctid?' '+p.acctid.slice(-4):'');
+  const defName=p.bank?cleanName(p.bank)+' '+(p.isCard?'cartão':'conta')+(p.acctid?' '+p.acctid.slice(-4):''):(p.isCard?'Cartão de crédito':'Conta corrente');
   const inc=p.tx.filter(t=>t.amt>0).reduce((s,t)=>s+t.amt,0),out=p.tx.filter(t=>t.amt<0).reduce((s,t)=>s-t.amt,0);
   openDlg(`<h2>Importar ${esc(p.fileName)}</h2>
   <div class="summary num">
@@ -871,9 +979,15 @@ function openImportDialog(p){
     <div class="field"><label for="iType">Tipo</label><select id="iType">${Object.entries(TYPE_NAME).map(([k,v])=>`<option value="${k}" ${k===defType?'selected':''}>${v}</option>`).join('')}</select></div></div>
     ${p.balance==null?`<div class="field"><label for="iBal">Saldo atual da conta (opcional)</label><input id="iBal" inputmode="decimal" placeholder="Como aparece hoje no app do banco"></div>`:''}
   </div>
+  ${p.format==='PDF'?`<div class="field"><label>Confira os lançamentos lidos do PDF</label>
+    <p class="muted" style="font-size:13px;margin:0 0 6px">Desmarque o que não for lançamento e toque no valor para trocar entre entrada e saída.${p.tx.some(t=>t.guess)?' Os marcados com ? tiveram o sinal deduzido pela descrição.':''}</p>
+    <div class="review" id="rev">${p.tx.map((t,i)=>`<div class="rv"><input type="checkbox" data-i="${i}" checked aria-label="Importar ${esc(t.desc)}"><span class="muted num">${fmtDate(t.date).slice(0,5)}</span><span class="rv-d" title="${esc(t.desc)}">${esc(cleanName(t.desc))}</span><button type="button" class="rv-a num ${t.amt>0?'pos':''}" data-s="${i}">${t.guess?'? ':''}${money(t.amt)}</button></div>`).join('')}</div></div>`:''}
   <p class="muted" style="font-size:13px;margin:0">Lançamentos já importados antes são ignorados automaticamente.${p.balance!=null?' O saldo do arquivo será usado para conferir a conta.':''}</p>
   <div class="dlg-act"><button class="btn" id="iCancel">Cancelar</button><button class="btn primary" id="iGo">Importar ${p.tx.length} lançamentos</button></div>`,()=>{
     const sync=()=>{$('#newBox').hidden=$('#iAcc').value!=='__new'};sync();$('#iAcc').onchange=sync;
+    const cnt=()=>{const n=p.tx.filter(t=>!t.skip).length;$('#iGo').textContent=`Importar ${n} lançamento${n===1?'':'s'}`;$('#iGo').disabled=!n};
+    dlg.querySelectorAll('#rev input[data-i]').forEach(c=>c.onchange=()=>{p.tx[c.dataset.i].skip=!c.checked;cnt()});
+    dlg.querySelectorAll('#rev [data-s]').forEach(b=>b.onclick=()=>{const t=p.tx[b.dataset.s];t.amt=-t.amt;t.guess=false;b.textContent=money(t.amt);b.classList.toggle('pos',t.amt>0)});
     $('#iCancel').onclick=closeDlg;
     $('#iGo').onclick=()=>{
       let acc;
@@ -884,7 +998,7 @@ function openImportDialog(p){
         S.accounts.push(acc);
       } else acc=S.accounts.find(a=>a.id===$('#iAcc').value);
       if(p.balance!=null&&p.balDate){acc.anchorAmt=p.balance;acc.anchorDate=p.balDate}
-      const r=importTx(acc,p.tx);
+      const r=importTx(acc,p.tx.filter(t=>!t.skip));
       persist();closeDlg();view.month=monthOf(dates[dates.length-1]);pickDefaultMonth();view.tab='resumo';render();
       toast(`${r.added} lançamento${r.added===1?'':'s'} importado${r.added===1?'':'s'}${r.skipped?` · ${r.skipped} já existia${r.skipped===1?'':'m'}`:''}`);
     };
@@ -899,7 +1013,7 @@ function importTx(acc,list){
     if(t.fitid){if(F[t.fitid]>0){F[t.fitid]--;dup=true}else if(C[c]>0){C[c]--;dup=true}}
     else if(A[c]>0){A[c]--;dup=true}
     if(dup){skipped++;continue}
-    S.tx.push({id:uid(),acc:acc.id,date:t.date,amt:t.amt,desc:t.desc,cat:categorize(t.desc,t.amt),...(t.fitid?{fitid:t.fitid}:{})});added++}
+    S.tx.push({id:uid(),acc:acc.id,date:t.date,amt:t.amt,desc:t.desc,cat:(acc.type==='cartao'&&t.amt>0&&/pagamento|pagto|pgto/.test(norm(t.desc)))?'fatura':categorize(t.desc,t.amt),...(t.fitid?{fitid:t.fitid}:{})});added++}
   return {added,skipped};
 }
 
