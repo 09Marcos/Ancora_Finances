@@ -98,6 +98,7 @@ h3{font-size:15px;margin:0 0 8px}
 .chip-btn{cursor:pointer;display:inline-flex;align-items:center;gap:5px;font:inherit;font-size:13px}
 .chip-btn:hover{border-color:var(--brand);color:var(--ink)}
 .chip-btn svg{color:var(--ink-3)}
+.adj-who{display:flex;align-items:center;gap:10px;margin:0 0 12px}.adj-who b{display:block}.adj-who small{color:var(--ink-3);font-size:13px}
 .lock-link.adj-link{margin-top:6px;padding:4px 0;font-size:14px}
 .chip{font-size:13px;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--ink-2)}
 .chip b{color:var(--ink);font-weight:600}
@@ -1254,10 +1255,12 @@ function openBalDialog(id){
   if(!S.accounts.length){
     openDlg(`<h2>Corrigir saldo</h2><p class="muted">Você ainda não tem contas. Crie uma conta e informe o saldo atual dela.</p><div class="dlg-act"><button class="btn" id="bCancel">Cancelar</button><button class="btn primary" id="bNew">Criar conta</button></div>`,()=>{$('#bCancel').onclick=closeDlg;$('#bNew').onclick=()=>{closeDlg();openAccDialog()}});return;
   }
-  let a=S.accounts.find(x=>x.id===id)||bankAccs()[0]||S.accounts[0];
+  const pool=view.bank?S.accounts.filter(x=>bankKey(x)===view.bank):S.accounts;
+  let a=S.accounts.find(x=>x.id===id)||pool.find(x=>x.type!=='cartao')||pool[0]||bankAccs()[0]||S.accounts[0];
   const draw=()=>{
     const card=a.type==='cartao',cur=accBalance(a);
-    openDlg(`<h2>${card?'Corrigir fatura atual':'Corrigir saldo atual'}</h2>
+    openDlg(`<h2>${card?'Corrigir fatura':'Corrigir saldo'}</h2>
+    <p class="adj-who">${badge(bankKey(a),true)}<span><b>${esc(a.name)}</b><small>${esc(groupInfo(bankKey(a)).n)}</small></span></p>
     ${S.accounts.length>1?`<div class="field"><label for="bAcc">Conta</label><select id="bAcc">${S.accounts.map(x=>`<option value="${x.id}" ${x.id===a.id?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div>`:`<p style="margin:0 0 10px"><b>${esc(a.name)}</b></p>`}
     <div class="summary num"><div><span>${card?'Fatura calculada pelo app':'Saldo calculado pelo app'}</span><b>${card?money(Math.max(0,-cur)):money(cur)}</b></div>${a.anchorDate?`<div><span>Última correção</span><b>${fmtDate(a.anchorDate)}</b></div>`:''}</div>
     <div class="field-row stack-sm">
