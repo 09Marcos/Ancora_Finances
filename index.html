@@ -1938,23 +1938,15 @@ async function chooseData(local){
   }
   try{localStorage.removeItem(LS_KEY)}catch(e){}
 }
-document.addEventListener('visibilitychange',()=>{
-  if(!FB.user||!LK)return;
-  if(document.visibilityState==='hidden'){
-    if(skipLockOnce){skipLockOnce=false;hiddenAt=0;return}
-    hiddenAt=Date.now();if(LK.after===0&&!locked)lockNow();
-  } else if(!locked&&hiddenAt&&LK.after>0&&Date.now()-hiddenAt>=LK.after*1000)lockNow();
-});
 /* Conta e acesso (menu) */
 async function openSecurityDialog(){
   if(!FB.user)return;
   const bioOk=await bioAvailable();
-  const afterOpts=[[0,'Sempre que abrir o app'],[60,'Se ficar mais de 1 minuto fora'],[300,'Se ficar mais de 5 minutos fora'],[900,'Se ficar mais de 15 minutos fora']];
   openDlg(`<h2>Conta e acesso</h2>
     <div class="sec-row"><div><b>${esc(LK.name||'Sua conta')}</b><small>${esc(FB.user.email)}${FB.user.emailVerified?' · e-mail confirmado':' · e-mail não confirmado'}</small></div><div class="sec-act">${FB.user.emailVerified?'':'<button class="btn small" id="sVer">Reenviar confirmação</button>'}</div></div>
     <div class="sec-row"><div><b>Senha</b><small>Usada para entrar em qualquer aparelho</small></div><div class="sec-act"><button class="btn small" id="sPw">Alterar senha</button></div></div>
     <div class="sec-row"><div><b>Biometria neste aparelho</b><small>${bioOk?(LK.bio?'Ativa: entre com a digital ou o rosto':'Entre com a digital ou o rosto, sem digitar a senha'):'Este aparelho ou navegador não oferece biometria para apps da web'}</small></div><div class="sec-act">${bioOk?(LK.bio?'<button class="btn small" id="sBioOff">Desativar</button>':'<button class="btn small primary" id="sBioOn">Ativar</button>'):''}</div></div>
-    <div class="field" style="margin-top:12px"><label for="sAfter">Pedir senha ou biometria</label><select id="sAfter">${afterOpts.map(([v,l])=>`<option value="${v}" ${LK.after===v?'selected':''}>${l}</option>`).join('')}</select></div>
+    <p class="muted" style="font-size:13px;margin:12px 0 0">A senha ou a biometria são pedidas quando você abre o app de novo depois de fechá-lo. Trocar de aba ou bloquear a tela do celular não pede de novo.</p>
     <div class="field"><label for="sName">Seu nome</label><input id="sName" value="${esc(LK.name||'')}" placeholder="Seu nome"></div>
     <div class="dlg-act"><button class="btn danger" id="sOut">Sair da conta</button><button class="btn" id="sClose">Fechar</button></div>`,()=>{
     $('#sClose').onclick=closeDlg;
@@ -1962,7 +1954,6 @@ async function openSecurityDialog(){
     $('#sPw').onclick=changePassword;
     const bon=$('#sBioOn');if(bon)bon.onclick=async()=>{await enableBio();openSecurityDialog()};
     const boff=$('#sBioOff');if(boff)boff.onclick=()=>{delete LK.bio;saveLK();toast('Biometria desativada neste aparelho');openSecurityDialog()};
-    $('#sAfter').onchange=()=>{LK.after=Number($('#sAfter').value);saveLK();toast('Preferência salva')};
     $('#sName').onchange=async()=>{LK.name=$('#sName').value.trim();saveLK();try{await FB.user.updateProfile({displayName:LK.name})}catch(e){}toast('Nome salvo')};
     $('#sOut').onclick=async()=>{if(await askConfirm('Sair da conta','Seus dados continuam guardados na conta. Para ver de novo neste aparelho, entre com e-mail e senha.','Sair da conta'))signOutAll()};
   });
