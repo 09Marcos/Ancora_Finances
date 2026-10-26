@@ -1,14 +1,14 @@
 {
-  "name": "Caixa · controle financeiro",
-  "short_name": "Caixa",
-  "description": "Importe extratos do banco e acompanhe saldo e gastos.",
+  "name": "Âncora Finances",
+  "short_name": "Âncora",
+  "description": "Controle financeiro pessoal: importe extratos e veja saldo e gastos. Seus dados ficam só no seu celular.",
   "lang": "pt-BR",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#EDF0EF",
-  "theme_color": "#24508F",
+  "theme_color": "#1D3F6E",
   "icons": [
     {
       "src": "icon-192.png",

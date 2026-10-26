@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Caixa</title>
+<title>Âncora Finances</title>
 <meta name="description" content="Controle financeiro pessoal: importe extratos e acompanhe saldo e gastos.">
 <meta name="theme-color" content="#EDF0EF" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#11171E" media="(prefers-color-scheme: dark)">
@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Caixa">
+<meta name="apple-mobile-web-app-title" content="Âncora">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -54,8 +54,8 @@ img,svg{max-width:100%}
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
 .top-in{max-width:1120px;margin:0 auto;padding:12px 20px 0;display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
 .logo{font-weight:800;font-size:22px;letter-spacing:-.02em;display:flex;align-items:center;gap:8px;margin-right:auto}
-.logo i{display:inline-flex;gap:2px}
-.logo i b{display:block;width:6px;height:18px;border-radius:2px}
+.logo .mark{width:34px;height:34px;border-radius:10px;background:#1D3F6E;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.logo-sub{font-weight:500;color:var(--ink-2)}
 .month{display:flex;align-items:center;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px}
 .month button{border:0;background:none;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;line-height:1}
 .month button:hover{background:var(--surface-2)}
@@ -224,7 +224,7 @@ dialog::backdrop{background:rgba(10,16,24,.45)}
 <body>
 <header class="top">
   <div class="top-in">
-    <div class="logo" aria-label="Caixa"><i aria-hidden="true"><b style="background:#2A5B9C"></b><b style="background:#C46A2A"></b><b style="background:#5E7F2F"></b></i>Caixa</div>
+    <div class="logo" aria-label="Âncora Finances"><span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.6" r="2" stroke="#E3A857"/><path d="M12 6.8V21M8 10h8M4.8 14.2A7.2 7.2 0 0 0 19.2 14.2M3.6 16.4l1.2-2.6 2.6 1M20.4 16.4l-1.2-2.6-2.6 1" stroke="#F2EEE4"/></svg></span><span>Âncora <span class="logo-sub">Finances</span></span></div>
     <div class="month" id="month"></div>
     <button class="btn" id="btnInstall" hidden>Instalar app</button>
     <button class="btn primary" id="btnImport">Importar extrato</button>
@@ -512,9 +512,9 @@ function render(){
 function emptyHTML(){
   return `<section class="empty">
     <h1>Traga o extrato do seu banco e veja para onde vai o seu dinheiro.</h1>
-    <p>Importe o arquivo OFX ou CSV que o app ou o internet banking do seu banco exporta. O Caixa organiza os lançamentos por categoria, calcula o saldo e aponta o que mudou de um mês para o outro.</p>
+    <p>Importe o arquivo PDF, OFX ou CSV que o app ou o internet banking do seu banco exporta. O Âncora organiza os lançamentos por categoria, calcula o saldo e aponta o que mudou de um mês para o outro.</p>
     <div class="row"><button class="btn primary" id="eImport">Importar extrato</button><button class="btn" id="eDemo">Explorar com dados de exemplo</button><button class="btn" id="eManual">Adicionar lançamento à mão</button></div>
-    <p class="notes">Dica: no app do banco, use Compartilhar e escolha o Caixa para importar sem salvar o arquivo. Os arquivos são lidos aqui mesmo, no seu celular. Suas senhas do banco nunca passam pelo Caixa.</p>
+    <p class="notes">Dica: no app do banco, use Compartilhar e escolha o Âncora para importar sem salvar o arquivo. Os arquivos são lidos aqui mesmo, no seu celular. Suas senhas do banco nunca passam pelo Âncora.</p>
   </section>`;
 }
 function bindEmpty(){$('#eImport').onclick=pickFile;$('#eDemo').onclick=loadDemo;$('#eManual').onclick=()=>openTxDialog()}
@@ -629,7 +629,7 @@ function txHTML(){
     <select id="fCat" aria-label="Categoria"><option value="">Todas as categorias</option>${catOptions(view.fCat).replace(/ selected/g,view.fCat?' selected':'')}</select>
     <button class="btn" id="addTx">Adicionar lançamento</button>
   </div>
-  <p class="muted" style="margin:0">${list.length} lançamento${list.length===1?'':'s'} · soma ${money(tot)}. Ao mudar a categoria, o Caixa aplica a mesma escolha aos lançamentos parecidos.</p>
+  <p class="muted" style="margin:0">${list.length} lançamento${list.length===1?'':'s'} · soma ${money(tot)}. Ao mudar a categoria, o Âncora aplica a mesma escolha aos lançamentos parecidos.</p>
   ${Object.keys(days).length?Object.entries(days).map(([d,ts])=>`<div class="day"><div class="day-h"><span>${dayLabel(d)}</span><span class="num">${money(ts.reduce((s,t)=>s+t.amt,0))}</span></div>
     ${ts.map(t=>`<div class="tx" data-id="${t.id}">
       <div style="min-width:0"><div class="tx-desc" title="${esc(t.desc)}">${esc(cleanName(t.desc))}</div>
@@ -703,10 +703,10 @@ function contasHTML(){
     <ol class="steps">
       <li>No app ou internet banking, abra o <b>extrato</b> da conta ou a <b>fatura</b> do cartão.</li>
       <li>Procure a opção <b>Exportar</b>, <b>Baixar</b> ou <b>Compartilhar</b> e escolha <b>OFX</b> (Money), <b>CSV</b> (Excel) ou <b>PDF</b>. O OFX é o mais preciso; no PDF você confere os lançamentos antes de importar.</li>
-      <li>Toque em <b>Compartilhar</b> e escolha o <b>Caixa</b> na lista. Ou salve o arquivo e toque em <b>Importar extrato</b> aqui; dá para escolher vários arquivos de uma vez. Lançamentos repetidos são ignorados, então pode importar períodos que se sobrepõem.</li>
+      <li>Toque em <b>Compartilhar</b> e escolha o <b>Âncora</b> na lista. Ou salve o arquivo e toque em <b>Importar extrato</b> aqui; dá para escolher vários arquivos de uma vez. Lançamentos repetidos são ignorados, então pode importar períodos que se sobrepõem.</li>
     </ol>
     <button class="btn primary" id="cImport" style="margin-top:8px">Importar extrato</button>
-    <p class="muted" style="font-size:13px;margin-top:14px">Funciona com a maioria dos bancos brasileiros: Nubank, Itaú, Bradesco, Banco do Brasil, Caixa, Santander, Inter, C6 e outros. O arquivo OFX traz também o saldo, que o Caixa usa para conferir a conta.</p>
+    <p class="muted" style="font-size:13px;margin-top:14px">Funciona com a maioria dos bancos brasileiros: Nubank, Itaú, Bradesco, Banco do Brasil, Caixa, Santander, Inter, C6 e outros. O arquivo OFX traz também o saldo, que o Âncora usa para conferir a conta.</p>
     <h3 style="margin-top:18px">Onde ficam seus dados</h3>
     <p class="muted" style="font-size:14px;margin-top:0">Somente neste aparelho, sem enviar nada para servidores. Se desinstalar o app ou limpar os dados do navegador, eles serão apagados, então baixe uma cópia de segurança de vez em quando${S.lastBackup?` (a última foi em ${fmtDate(S.lastBackup)})`:''}.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"><button class="btn small" id="bkOut">Baixar cópia de segurança</button><button class="btn small" id="bkIn">Restaurar cópia</button></div>
@@ -799,7 +799,7 @@ function openAccDialog(){
 function openBalDialog(id){
   const a=S.accounts.find(x=>x.id===id);const card=a.type==='cartao';
   openDlg(`<h2>${card?'Fatura atual':'Saldo atual'} de ${esc(a.name)}</h2>
-  <p class="muted" style="margin-top:0">${card?'Informe o valor da fatura em aberto hoje.':'Informe o saldo que aparece hoje no app do banco.'} O Caixa usa esse valor como referência e recalcula o saldo a partir dos lançamentos.</p>
+  <p class="muted" style="margin-top:0">${card?'Informe o valor da fatura em aberto hoje.':'Informe o saldo que aparece hoje no app do banco.'} O Âncora usa esse valor como referência e recalcula o saldo a partir dos lançamentos.</p>
   <div class="field"><label for="bVal">Valor (R$)</label><input id="bVal" inputmode="decimal" value="${String(Math.abs(accBalance(a))).replace('.',',')}"></div>
   <div class="dlg-act"><button class="btn" id="bCancel">Cancelar</button><button class="btn primary" id="bSave">Salvar saldo</button></div>`,()=>{
     $('#bCancel').onclick=closeDlg;
@@ -1126,8 +1126,8 @@ async function checkShared(){
 /* ---------- Cópia de segurança ---------- */
 function exportBackup(){
   const d=todayISO();S.lastBackup=d;persist();
-  const blob=new Blob([JSON.stringify({app:'caixa',versao:1,criado:d,dados:{accounts:S.accounts,tx:S.tx,budgets:S.budgets,rules:S.rules}})],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`caixa-backup-${d}.json`;document.body.appendChild(a);a.click();
+  const blob=new Blob([JSON.stringify({app:'ancora',versao:1,criado:d,dados:{accounts:S.accounts,tx:S.tx,budgets:S.budgets,rules:S.rules}})],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`ancora-backup-${d}.json`;document.body.appendChild(a);a.click();
   setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);render();toast('Cópia de segurança baixada');
 }
 $('#bkFile').onchange=async e=>{
@@ -1137,7 +1137,7 @@ $('#bkFile').onchange=async e=>{
     const ok=await askConfirm('Restaurar cópia de segurança',`A cópia de ${fmtDate(j.criado)} tem ${d.accounts.length} contas e ${d.tx.length} lançamentos. Ela vai substituir todos os dados atuais deste aparelho.`,'Restaurar cópia',true);
     if(!ok)return;
     S={accounts:d.accounts,tx:d.tx,budgets:d.budgets||{},rules:d.rules||{},lastBackup:j.criado};persist();view.month=null;pickDefaultMonth();view.tab='resumo';render();toast('Cópia restaurada');
-  }catch(err){openDlg(`<h2>Arquivo não reconhecido</h2><p>Escolha um arquivo de cópia de segurança do Caixa (caixa-backup-…json).</p><div class="dlg-act"><button class="btn primary" id="okBk">Entendi</button></div>`,()=>$('#okBk').onclick=closeDlg)}
+  }catch(err){openDlg(`<h2>Arquivo não reconhecido</h2><p>Escolha um arquivo de cópia de segurança do Âncora (ancora-backup-…json).</p><div class="dlg-act"><button class="btn primary" id="okBk">Entendi</button></div>`,()=>$('#okBk').onclick=closeDlg)}
 };
 
 /* ---------- Instalação (PWA) ---------- */
@@ -1145,7 +1145,7 @@ let installEvt=null;
 const isStandalone=()=>window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
 const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;$('#btnInstall').hidden=false});
-window.addEventListener('appinstalled',()=>{installEvt=null;$('#btnInstall').hidden=true;toast('Caixa instalado')});
+window.addEventListener('appinstalled',()=>{installEvt=null;$('#btnInstall').hidden=true;toast('Âncora instalado')});
 if(isIOS&&!isStandalone())$('#btnInstall').hidden=false;
 $('#btnInstall').onclick=async()=>{
   if(installEvt){installEvt.prompt();const r=await installEvt.userChoice;if(r.outcome==='accepted'){$('#btnInstall').hidden=true}installEvt=null;return}
