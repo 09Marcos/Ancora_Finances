@@ -238,6 +238,19 @@ dialog::backdrop{background:rgba(10,16,24,.45)}
 body.is-locked .top,body.is-locked main,body.is-locked .fab-wrap{visibility:hidden}
 .lock{position:fixed;inset:0;z-index:80;background:var(--bg);display:flex;align-items:center;justify-content:center;overflow-y:auto;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px))}
 .lock-in{width:100%;max-width:320px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.lock-form{display:flex;gap:8px;width:100%;margin:4px 0 14px}
+.lock-form input{flex:1;min-width:0;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:12px 14px;font-size:16px}
+.lock-form.shake{animation:shake .35s}
+.lock-bio{width:100%;justify-content:center;padding:12px}
+.lock-bio svg,.setup-form .btn svg{width:22px;height:22px}
+.setup .lock-msg{max-width:34ch}
+.setup-form{display:flex;flex-direction:column;gap:6px;width:100%;text-align:left;margin-top:4px}
+.setup-form label,.setup-form .lbl{font-size:13px;font-weight:600;color:var(--ink-2);margin-top:6px}
+.setup-form input{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:11px 13px;font-size:16px}
+.setup-form .seg{width:100%}.setup-form .seg button{flex:1}
+.setup-form .btn{justify-content:center;padding:12px;margin-top:6px}
+.setup-form .lock-msg{margin:2px 0;min-height:0;text-align:left}
+.setup-note{font-size:12px;color:var(--ink-3);margin-top:16px;max-width:36ch}
 .lock-mark{width:64px;height:64px;border-radius:18px;background:#1D3F6E;display:flex;align-items:center;justify-content:center}
 .lock-mark svg{width:36px;height:36px}
 .lock h1{font-size:24px;letter-spacing:-.02em;margin:14px 0 4px}
@@ -1000,7 +1013,7 @@ function openPlanilhaDialog(p){return new Promise(resolve=>{
     <div class="review">${groups.map(g=>`<div class="rv-h">${secName[g.sec]}</div>${g.items.map((it,i)=>{const k=sh.items.indexOf(it);return `<div class="pl"><div class="pl-n"><b>${esc(it.name)}</b><small class="muted num">${valsLabel(it.vals)}</small></div><select data-pl="${k}" aria-label="O que fazer com ${esc(it.name)}">
       <option value="fixa" ${it.choice==='fixa'?'selected':''}>Conta fixa</option><option value="entrada" ${it.choice==='entrada'?'selected':''}>Entrada fixa</option><option value="orc" ${it.choice==='orc'?'selected':''}>Limite no orçamento</option><option value="nao" ${it.choice==='nao'?'selected':''}>Não importar</option></select></div>`}).join('')}`).join('')}</div>
     <div class="dlg-act"><button class="btn" id="plCancel">${p.step?'Pular arquivo':'Cancelar'}</button><button class="btn primary" id="plGo">Importar</button></div>`,()=>{
-      const sel=$('#plSheet');if(sel)sel.onchange=()=>{si=Number(sel.value);draw()};
+      const sel=$('#plSheet');if(sel)sel.onchange=()=>{si=Number(sel.value);dlgCb=null;draw()};
       dlg.querySelectorAll('[data-pl]').forEach(s=>s.onchange=()=>{sh.items[s.dataset.pl].choice=s.value});
       $('#plCancel').onclick=closeDlg;
       $('#plGo').onclick=()=>{
@@ -1510,7 +1523,7 @@ function drawerHTML(){
   <div class="dr-t">Ações rápidas</div>
   <div class="dr-sec">${item('import','Importar extrato ou planilha','up')}${item('add','Adicionar lançamento','plus')}${item('addfx','Adicionar conta fixa','repeat')}</div>
   <div class="dr-t">Segurança e dados</div>
-  <div class="dr-sec">${item('sec','Bloqueio: PIN e biometria','shield')}${LK?item('locknow','Bloquear agora','lock'):''}${item('bkout','Baixar cópia de segurança','down')}${item('bkin','Restaurar cópia','restore')}${canInstall?item('install','Instalar app no celular','phone'):''}</div>
+  <div class="dr-sec">${item('sec','Acesso: PIN, senha e biometria','shield')}${item('locknow','Sair e bloquear','lock')}${item('bkout','Baixar cópia de segurança','down')}${item('bkin','Restaurar cópia','restore')}${canInstall?item('install','Instalar app no celular','phone'):''}</div>
   <p class="dr-foot">Seus dados ficam só neste aparelho.${S.lastBackup?` Última cópia de segurança: ${fmtDate(S.lastBackup)}.`:''}</p>`;
 }
 function openDrawer(){
@@ -1537,22 +1550,40 @@ $('#menuBtn').onclick=openDrawer;
 $('#drawerBg').onclick=closeDrawer;
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#drawer').hidden)closeDrawer()});
 
-/* ---------- Bloqueio: PIN e biometria ---------- */
+/* ---------- Acesso: PIN, senha e biometria ---------- */
 const LOCK_KEY='ancora:lock';
 let LK=(()=>{try{return JSON.parse(localStorage.getItem(LOCK_KEY))||null}catch(e){return null}})();
 const saveLK=()=>{try{LK?localStorage.setItem(LOCK_KEY,JSON.stringify(LK)):localStorage.removeItem(LOCK_KEY)}catch(e){}};
 const b64=buf=>btoa(String.fromCharCode(...new Uint8Array(buf)));
 const unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+const isPinType=()=>!LK||LK.type!=='senha';
+const secretWord=()=>isPinType()?'PIN':'senha';
 async function hashPin(pin,salt,iter){
   const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(pin),'PBKDF2',false,['deriveBits']);
   return b64(await crypto.subtle.deriveBits({name:'PBKDF2',salt:unb64(salt),iterations:iter,hash:'SHA-256'},k,256));
 }
-async function setPin(pin){const salt=b64(crypto.getRandomValues(new Uint8Array(16)));const iter=150000;LK={...(LK||{}),salt,iter,hash:await hashPin(pin,salt,iter),len:pin.length,after:LK&&LK.after!=null?LK.after:60};saveLK()}
+async function setSecret(secret,type,name){
+  const salt=b64(crypto.getRandomValues(new Uint8Array(16)));const iter=150000;
+  LK={...(LK||{}),type,salt,iter,hash:await hashPin(secret,salt,iter),len:secret.length,after:LK&&LK.after!=null?LK.after:0};
+  if(name!=null)LK.name=name;saveLK();
+}
+const setPin=pin=>setSecret(pin,'pin');
 async function checkPin(pin){return !!LK&&(await hashPin(pin,LK.salt,LK.iter))===LK.hash}
+function validateSecret(type,a,b){
+  if(type==='pin'){
+    if(!/^\d{4,6}$/.test(a))return 'O PIN precisa ter de 4 a 6 números.';
+    if(/^(\d)\1+$/.test(a)||'0123456789'.includes(a)||'9876543210'.includes(a))return 'Esse PIN é fácil de adivinhar. Escolha outro.';
+  } else {
+    if(a.length<6)return 'A senha precisa ter pelo menos 6 caracteres.';
+    if(!/[a-zA-Z]/.test(a)||!/\d/.test(a))return 'Use letras e números na senha.';
+  }
+  if(a!==b)return `As duas ${type==='pin'?'entradas do PIN':'senhas'} estão diferentes.`;
+  return '';
+}
 async function bioAvailable(){try{return !!(window.PublicKeyCredential&&window.isSecureContext&&await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())}catch(e){return false}}
 async function bioRegister(){
   const cred=await navigator.credentials.create({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),rp:{name:'Âncora Finances',id:location.hostname},
-    user:{id:crypto.getRandomValues(new Uint8Array(16)),name:'Âncora Finances',displayName:'Âncora Finances'},
+    user:{id:crypto.getRandomValues(new Uint8Array(16)),name:LK&&LK.name?LK.name:'Âncora Finances',displayName:LK&&LK.name?LK.name:'Âncora Finances'},
     pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
     authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required',residentKey:'discouraged'},timeout:60000,attestation:'none'}});
   LK.bio=b64(cred.rawId);saveLK();
@@ -1562,44 +1593,56 @@ async function bioVerify(){
   if(!a)return false;const ad=new Uint8Array(a.response.authenticatorData);return ad.length>32&&(ad[32]&4)!==0;
 }
 let locked=false,pinBuf='',lockFails=0,lockUntil=0,hiddenAt=0,skipLockOnce=false,bioBusy=false;const afterUnlock=[];
+const markSVG=()=>$('.logo .mark').innerHTML;
+const BIO_SVG='<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M6.5 6.5a8 8 0 0 1 11 0"/><path d="M4.5 11a8 8 0 0 1 1-3M19.5 11a8 8 0 0 0-1-3"/><path d="M8 12a4 4 0 0 1 8 0v1.5"/><path d="M12 12v4M8 15.5V12M16 16.5c0 1.5-.5 3-1.5 4.2M8.4 19.5A9 9 0 0 1 8 17"/></svg>';
+function hideApp(){locked=true;document.body.classList.add('is-locked');if(!$('#drawer').hidden){$('#drawer').classList.remove('open');$('#drawer').hidden=true}if(dlg.open)closeDlg();$('#lock').hidden=false}
 function lockNow(){
-  if(!LK)return;locked=true;document.body.classList.add('is-locked');
-  if(!$('#drawer').hidden){$('#drawer').classList.remove('open');$('#drawer').hidden=true}
-  if(dlg.open)closeDlg();
-  pinBuf='';$('#lock').hidden=false;drawLock('Digite seu PIN');
+  if(!LK)return showSetup();
+  hideApp();pinBuf='';drawLock(`Digite ${isPinType()?'seu PIN':'sua senha'}`);
   if(LK.bio)setTimeout(tryBio,350);
 }
+function greet(){const h=new Date().getHours();return (h<12?'Bom dia':h<18?'Boa tarde':'Boa noite')+(LK&&LK.name?`, ${esc(LK.name)}`:'')}
 function drawLock(msg,bad){
-  const pad=['1','2','3','4','5','6','7','8','9',LK.bio?'bio':'','0','del'];
-  $('#lock').innerHTML=`<div class="lock-in">
-    <span class="mark lock-mark" aria-hidden="true">${$('.logo .mark').innerHTML}</span>
-    <h1>Âncora <span class="logo-sub">Finances</span></h1>
-    <p class="lock-msg ${bad?'bad':''}" id="lockMsg" role="status">${esc(msg)}</p>
-    <div class="dots ${bad?'shake':''}" aria-hidden="true">${Array.from({length:LK.len},(_,i)=>`<i class="${i<pinBuf.length?'on':''}"></i>`).join('')}</div>
-    <div class="pad">${pad.map(k=>k===''?'<span></span>':k==='bio'?`<button class="key key-ic" data-k="bio" aria-label="Desbloquear com biometria"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6.5 6.5a8 8 0 0 1 11 0"/><path d="M4.5 11a8 8 0 0 1 1-3M19.5 11a8 8 0 0 0-1-3"/><path d="M8 12a4 4 0 0 1 8 0v1.5"/><path d="M12 12v4M8 15.5V12M16 16.5c0 1.5-.5 3-1.5 4.2M8.4 19.5A9 9 0 0 1 8 17"/></svg></button>`:k==='del'?`<button class="key key-ic" data-k="del" aria-label="Apagar">⌫</button>`:`<button class="key" data-k="${k}">${k}</button>`).join('')}</div>
-    <button class="lock-link" id="lockForgot">Esqueci o PIN</button></div>`;
-  $('#lock').querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>lockKey(b.dataset.k));
+  const head=`<span class="mark lock-mark" aria-hidden="true">${markSVG()}</span><h1>${greet()}</h1><p class="lock-msg ${bad?'bad':''}" id="lockMsg" role="status">${esc(msg)}</p>`;
+  if(isPinType()){
+    const pad=['1','2','3','4','5','6','7','8','9',LK.bio?'bio':'','0','del'];
+    $('#lock').innerHTML=`<div class="lock-in">${head}
+      <div class="dots ${bad?'shake':''}" aria-hidden="true">${Array.from({length:LK.len},(_,i)=>`<i class="${i<pinBuf.length?'on':''}"></i>`).join('')}</div>
+      <div class="pad">${pad.map(k=>k===''?'<span></span>':k==='bio'?`<button class="key key-ic" data-k="bio" aria-label="Entrar com biometria">${BIO_SVG}</button>`:k==='del'?`<button class="key key-ic" data-k="del" aria-label="Apagar">⌫</button>`:`<button class="key" data-k="${k}">${k}</button>`).join('')}</div>
+      <button class="lock-link" id="lockForgot">Esqueci o PIN</button></div>`;
+    $('#lock').querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>lockKey(b.dataset.k));
+  } else {
+    $('#lock').innerHTML=`<div class="lock-in">${head}
+      <div class="lock-form ${bad?'shake':''}"><input id="lockPw" type="password" autocomplete="current-password" placeholder="Senha" aria-label="Senha"><button class="btn primary" id="lockGo">Entrar</button></div>
+      ${LK.bio?`<button class="btn lock-bio" id="lockBio">${BIO_SVG}<span>Entrar com biometria</span></button>`:''}
+      <button class="lock-link" id="lockForgot">Esqueci a senha</button></div>`;
+    const pw=$('#lockPw');$('#lockGo').onclick=()=>submitSecret(pw.value);pw.onkeydown=e=>{if(e.key==='Enter')submitSecret(pw.value)};
+    if(LK.bio)$('#lockBio').onclick=tryBio;
+    setTimeout(()=>{if(locked&&!bioBusy){const i=$('#lockPw');i&&i.focus()}},LK.bio?900:50);
+  }
   $('#lockForgot').onclick=forgotPin;
 }
 function updDots(){$('#lock').querySelectorAll('.dots i').forEach((d,i)=>d.classList.toggle('on',i<pinBuf.length))}
+async function submitSecret(v){
+  if(!locked||!v)return;
+  if(Date.now()<lockUntil){$('#lockMsg').textContent=`Muitas tentativas. Aguarde ${Math.ceil((lockUntil-Date.now())/1000)} segundos.`;return}
+  if(await checkPin(v))return unlock();
+  lockFails++;pinBuf='';const w=secretWord();
+  if(lockFails>=5){lockUntil=Date.now()+30000*(lockFails-4);drawLock(`${w==='PIN'?'PIN incorreto':'Senha incorreta'}. Aguarde ${30*(lockFails-4)} segundos.`,true)}
+  else drawLock(`${w==='PIN'?'PIN incorreto':'Senha incorreta'}. Tente de novo.`,true);
+}
 async function lockKey(k){
-  if(!locked)return;
+  if(!locked||!isPinType())return;
   if(k==='bio')return tryBio();
   if(k==='del'){pinBuf=pinBuf.slice(0,-1);updDots();return}
   if(Date.now()<lockUntil){$('#lockMsg').textContent=`Muitas tentativas. Aguarde ${Math.ceil((lockUntil-Date.now())/1000)} segundos.`;return}
   if(pinBuf.length>=LK.len)return;
   pinBuf+=k;updDots();
-  if(pinBuf.length===LK.len){
-    const ok=await checkPin(pinBuf);
-    if(ok)return unlock();
-    lockFails++;pinBuf='';
-    if(lockFails>=5){lockUntil=Date.now()+30000*(lockFails-4);drawLock(`PIN incorreto. Aguarde ${30*(lockFails-4)} segundos.`,true)}
-    else drawLock(`PIN incorreto. Tente de novo.`,true);
-  }
+  if(pinBuf.length===LK.len)submitSecret(pinBuf);
 }
 async function tryBio(){
   if(!locked||!LK||!LK.bio||bioBusy)return;bioBusy=true;
-  try{if(await bioVerify())unlock()}catch(e){const m=$('#lockMsg');if(m&&locked)m.textContent='Use o PIN ou toque na digital para tentar de novo.'}
+  try{if(await bioVerify())unlock()}catch(e){const m=$('#lockMsg');if(m&&locked)m.textContent=`Use ${isPinType()?'o PIN':'a senha'} ou toque na biometria para tentar de novo.`}
   bioBusy=false;
 }
 function unlock(){
@@ -1608,12 +1651,57 @@ function unlock(){
   while(afterUnlock.length)afterUnlock.shift()();
 }
 async function forgotPin(){
-  const ok=await askConfirm('Esqueceu o PIN?','Para proteger seus dados, o PIN não pode ser recuperado. Você pode apagar os dados deste aparelho e o PIN, e depois restaurar sua última cópia de segurança pelo menu.','Apagar dados e o PIN',true);
+  const w=secretWord();
+  const ok=await askConfirm(`Esqueceu ${w==='PIN'?'o PIN':'a senha'}?`,`Para proteger seus dados, ${w==='PIN'?'o PIN':'a senha'} não pode ser recuperad${w==='PIN'?'o':'a'}. Você pode apagar os dados deste aparelho, criar um acesso novo e depois restaurar sua última cópia de segurança pelo menu.`,'Apagar dados e criar acesso novo',true);
   if(!ok)return;
-  S={accounts:[],tx:[],budgets:{},rules:{},fixed:[]};persist();LK=null;saveLK();unlock();toast('Dados e PIN apagados. Restaure sua cópia de segurança pelo menu.');
+  S={accounts:[],tx:[],budgets:{},rules:{},fixed:[]};persist();LK=null;saveLK();showSetup();
+}
+/* Primeiro acesso: criação obrigatória */
+function showSetup(){
+  hideApp();
+  let type='pin';
+  const draw=()=>{
+    $('#lock').innerHTML=`<div class="lock-in setup">
+      <span class="mark lock-mark" aria-hidden="true">${markSVG()}</span>
+      <h1>Crie seu acesso</h1>
+      <p class="lock-msg">O Âncora vai pedir este acesso sempre que for aberto, como os apps de banco.</p>
+      <div class="setup-form">
+        <label for="suName">Como podemos te chamar?</label><input id="suName" autocomplete="given-name" placeholder="Seu nome" value="${esc((LK&&LK.name)||'')}">
+        <span class="lbl">Tipo de acesso</span>
+        <div class="seg" role="group" aria-label="Tipo de acesso"><button type="button" id="suPin" aria-pressed="${type==='pin'}">PIN numérico</button><button type="button" id="suPw" aria-pressed="${type==='senha'}">Senha</button></div>
+        <label for="su1">${type==='pin'?'PIN (4 a 6 números)':'Senha (mínimo 6, com letras e números)'}</label>
+        <input id="su1" type="password" ${type==='pin'?'inputmode="numeric" maxlength="6"':''} autocomplete="new-password">
+        <label for="su2">Repita ${type==='pin'?'o PIN':'a senha'}</label>
+        <input id="su2" type="password" ${type==='pin'?'inputmode="numeric" maxlength="6"':''} autocomplete="new-password">
+        <p class="lock-msg bad" id="suErr" role="alert"></p>
+        <button class="btn primary" id="suGo">Criar acesso</button>
+      </div>
+      <p class="setup-note">Se esquecer, não há como recuperar: será preciso apagar os dados e restaurar uma cópia de segurança.</p></div>`;
+    const keepName=()=>$('#suName').value;
+    $('#suPin').onclick=()=>{const n=keepName();type='pin';draw();$('#suName').value=n};
+    $('#suPw').onclick=()=>{const n=keepName();type='senha';draw();$('#suName').value=n};
+    $('#su2').onkeydown=e=>{if(e.key==='Enter')$('#suGo').click()};
+    $('#suGo').onclick=async()=>{
+      const name=$('#suName').value.trim(),a=$('#su1').value,b=$('#su2').value;
+      const err=validateSecret(type,a,b);if(err){$('#suErr').textContent=err;return}
+      $('#suGo').disabled=true;
+      await setSecret(a,type,name);
+      if(await bioAvailable())showBioOffer();else{unlock();toast('Acesso criado')}
+    };
+  };
+  draw();setTimeout(()=>{const i=$('#suName');i&&i.focus()},50);
+}
+function showBioOffer(){
+  $('#lock').innerHTML=`<div class="lock-in setup">
+    <span class="mark lock-mark" aria-hidden="true">${markSVG()}</span>
+    <h1>Entrar com biometria?</h1>
+    <p class="lock-msg">Use a digital ou o rosto para abrir o Âncora sem digitar ${isPinType()?'o PIN':'a senha'}. O celular pode perguntar se quer criar uma chave de acesso: confirme.</p>
+    <div class="setup-form"><button class="btn primary" id="boYes">${BIO_SVG}<span>Ativar biometria</span></button><button class="btn" id="boNo">Agora não</button></div></div>`;
+  $('#boYes').onclick=async()=>{await enableBio();unlock()};
+  $('#boNo').onclick=()=>{unlock();toast('Acesso criado. Você pode ativar a biometria pelo menu.')};
 }
 document.addEventListener('keydown',e=>{
-  if(!locked||dlg.open)return;
+  if(!locked||dlg.open||!LK||!isPinType()||!$('#lock').querySelector('.pad'))return;
   if(/^[0-9]$/.test(e.key)){e.preventDefault();lockKey(e.key)}
   else if(e.key==='Backspace'){e.preventDefault();lockKey('del')}
 });
@@ -1624,50 +1712,52 @@ document.addEventListener('visibilitychange',()=>{
     hiddenAt=Date.now();if(LK.after===0&&!locked)lockNow();
   } else if(!locked&&hiddenAt&&Date.now()-hiddenAt>=LK.after*1000)lockNow();
 });
-function askPin(title,label){return new Promise(res=>openDlg(`<h2>${esc(title)}</h2><div class="field"><label for="apv">${esc(label)}</label><input id="apv" type="password" inputmode="numeric" autocomplete="off" maxlength="6"></div><p id="apErr" style="color:var(--out);margin:0"></p><div class="dlg-act"><button class="btn" id="apNo">Cancelar</button><button class="btn primary" id="apYes">Continuar</button></div>`,()=>{
+function askPin(title,label){return new Promise(res=>openDlg(`<h2>${esc(title)}</h2><div class="field"><label for="apv">${esc(label)}</label><input id="apv" type="password" ${isPinType()?'inputmode="numeric" maxlength="6"':''} autocomplete="current-password"></div><p id="apErr" style="color:var(--out);margin:0"></p><div class="dlg-act"><button class="btn" id="apNo">Cancelar</button><button class="btn primary" id="apYes">Continuar</button></div>`,()=>{
   $('#apNo').onclick=()=>{res(null);closeDlg()};
-  $('#apYes').onclick=async()=>{const v=$('#apv').value;if(!(await checkPin(v))){$('#apErr').textContent='PIN incorreto.';$('#apv').value='';return}res(v);closeDlg()};
+  $('#apYes').onclick=async()=>{const v=$('#apv').value;if(!(await checkPin(v))){$('#apErr').textContent=isPinType()?'PIN incorreto.':'Senha incorreta.';$('#apv').value='';return}res(v);closeDlg()};
   $('#apv').onkeydown=e=>{if(e.key==='Enter')$('#apYes').click()};setTimeout(()=>{const i=$('#apv');i&&i.focus()},30);
 },()=>res(null)))}
-function openPinSetup(change){return new Promise(res=>openDlg(`<h2>${change?'Alterar PIN':'Criar PIN'}</h2>
-  <p class="muted" style="margin-top:0">Use de 4 a 6 números. Evite datas de aniversário e sequências como 1234.</p>
-  <div class="field"><label for="np1">Novo PIN</label><input id="np1" type="password" inputmode="numeric" autocomplete="new-password" maxlength="6"></div>
-  <div class="field"><label for="np2">Repita o PIN</label><input id="np2" type="password" inputmode="numeric" autocomplete="new-password" maxlength="6"></div>
-  <p id="npErr" style="color:var(--out);margin:0"></p>
-  <div class="dlg-act"><button class="btn" id="npNo">Cancelar</button><button class="btn primary" id="npYes">Salvar PIN</button></div>`,()=>{
-    $('#npNo').onclick=()=>{res(false);closeDlg()};
-    $('#npYes').onclick=async()=>{const a=$('#np1').value,b=$('#np2').value;
-      if(!/^\d{4,6}$/.test(a)){$('#npErr').textContent='O PIN precisa ter de 4 a 6 números.';return}
-      if(/^(\d)\1+$/.test(a)||'0123456789'.includes(a)||'9876543210'.includes(a)){$('#npErr').textContent='Esse PIN é fácil de adivinhar. Escolha outro.';return}
-      if(a!==b){$('#npErr').textContent='Os dois PINs estão diferentes.';$('#np2').value='';return}
-      await setPin(a);res(true);closeDlg()};
-    $('#np2').onkeydown=e=>{if(e.key==='Enter')$('#npYes').click()};setTimeout(()=>{const i=$('#np1');i&&i.focus()},30);
-  },()=>res(false)))}
+function openCredSetup(){return new Promise(res=>{
+  let type=isPinType()?'pin':'senha';
+  const draw=()=>openDlg(`<h2>Alterar acesso</h2>
+    <div class="field"><div class="seg"><button type="button" id="cPin" aria-pressed="${type==='pin'}">PIN numérico</button><button type="button" id="cPw" aria-pressed="${type==='senha'}">Senha</button></div></div>
+    <div class="field"><label for="np1">${type==='pin'?'Novo PIN (4 a 6 números)':'Nova senha (mínimo 6, com letras e números)'}</label><input id="np1" type="password" ${type==='pin'?'inputmode="numeric" maxlength="6"':''} autocomplete="new-password"></div>
+    <div class="field"><label for="np2">Repita ${type==='pin'?'o PIN':'a senha'}</label><input id="np2" type="password" ${type==='pin'?'inputmode="numeric" maxlength="6"':''} autocomplete="new-password"></div>
+    <p id="npErr" style="color:var(--out);margin:0"></p>
+    <div class="dlg-act"><button class="btn" id="npNo">Cancelar</button><button class="btn primary" id="npYes">Salvar</button></div>`,()=>{
+      $('#cPin').onclick=()=>{type='pin';dlgCb=null;draw()};$('#cPw').onclick=()=>{type='senha';dlgCb=null;draw()};
+      $('#npNo').onclick=()=>{res(false);closeDlg()};
+      $('#npYes').onclick=async()=>{const a=$('#np1').value,b=$('#np2').value;const err=validateSecret(type,a,b);if(err){$('#npErr').textContent=err;return}
+        await setSecret(a,type);res(true);closeDlg()};
+      $('#np2').onkeydown=e=>{if(e.key==='Enter')$('#npYes').click()};setTimeout(()=>{const i=$('#np1');i&&i.focus()},30);
+    },()=>res(false));
+  draw();
+})}
 async function openSecurityDialog(){
+  if(!LK)return showSetup();
   const bioOk=await bioAvailable();
-  const afterOpts=[[0,'Assim que sair do app'],[60,'Depois de 1 minuto fora'],[300,'Depois de 5 minutos fora'],[900,'Depois de 15 minutos fora']];
-  openDlg(`<h2>Bloqueio do app</h2>
-  ${!LK?`<p class="muted" style="margin-top:0">Peça um PIN${bioOk?' ou a sua digital':''} sempre que o Âncora for aberto. Assim, quem pegar seu celular desbloqueado não vê suas finanças.</p>
-    <div class="dlg-act" style="justify-content:flex-start"><button class="btn primary" id="sCreate">Criar PIN</button></div>`
-  :`<div class="sec-row"><div><b>PIN</b><small>Ativo, com ${LK.len} números</small></div><div class="sec-act"><button class="btn small" id="sChange">Alterar PIN</button><button class="btn small danger" id="sOff">Desativar bloqueio</button></div></div>
-    <div class="sec-row"><div><b>Biometria</b><small>${bioOk?(LK.bio?'Ativa: desbloqueie com a digital ou o rosto':'Desbloqueie com a digital ou o rosto, sem digitar o PIN'):'Este celular ou navegador não oferece biometria para apps da web'}</small></div><div class="sec-act">${bioOk?(LK.bio?'<button class="btn small" id="sBioOff">Desativar</button>':'<button class="btn small primary" id="sBioOn">Ativar biometria</button>'):''}</div></div>
-    <div class="field" style="margin-top:12px"><label for="sAfter">Pedir o PIN de novo</label><select id="sAfter">${afterOpts.map(([v,l])=>`<option value="${v}" ${LK.after===v?'selected':''}>${l}</option>`).join('')}</select></div>`}
-  <p class="muted" style="font-size:13px">Se esquecer o PIN, não há como recuperá-lo: será preciso apagar os dados deste aparelho e restaurar uma cópia de segurança. Baixe uma cópia pelo menu antes de ativar.</p>
-  <div class="dlg-act"><button class="btn" id="sClose">Fechar</button></div>`,()=>{
+  const afterOpts=[[0,'Sempre que abrir o app'],[60,'Se ficar mais de 1 minuto fora'],[300,'Se ficar mais de 5 minutos fora'],[900,'Se ficar mais de 15 minutos fora']];
+  openDlg(`<h2>Acesso ao app</h2>
+    <div class="sec-row"><div><b>${isPinType()?'PIN':'Senha'}</b><small>${isPinType()?`PIN com ${LK.len} números`:'Senha com letras e números'}${LK.name?` · ${esc(LK.name)}`:''}</small></div><div class="sec-act"><button class="btn small" id="sChange">Alterar acesso</button></div></div>
+    <div class="sec-row"><div><b>Biometria</b><small>${bioOk?(LK.bio?'Ativa: entre com a digital ou o rosto':'Entre com a digital ou o rosto, sem digitar nada'):'Este celular ou navegador não oferece biometria para apps da web'}</small></div><div class="sec-act">${bioOk?(LK.bio?'<button class="btn small" id="sBioOff">Desativar</button>':'<button class="btn small primary" id="sBioOn">Ativar biometria</button>'):''}</div></div>
+    <div class="field" style="margin-top:12px"><label for="sAfter">Pedir acesso</label><select id="sAfter">${afterOpts.map(([v,l])=>`<option value="${v}" ${LK.after===v?'selected':''}>${l}</option>`).join('')}</select></div>
+    <div class="field"><label for="sName">Seu nome na tela de entrada</label><input id="sName" value="${esc(LK.name||'')}" placeholder="Seu nome"></div>
+    <p class="muted" style="font-size:13px">Se esquecer ${isPinType()?'o PIN':'a senha'}, não há como recuperar: será preciso apagar os dados deste aparelho e restaurar uma cópia de segurança. Baixe uma cópia pelo menu de vez em quando.</p>
+    <div class="dlg-act"><button class="btn" id="sClose">Fechar</button></div>`,()=>{
     $('#sClose').onclick=closeDlg;
-    const c=$('#sCreate');if(c)c.onclick=async()=>{if(await openPinSetup(false)){toast('PIN criado. O app vai pedir o PIN ao abrir.');if(bioOk&&await askConfirm('Usar biometria?','Desbloqueie o Âncora com a digital ou o rosto, sem digitar o PIN. O celular pode perguntar se quer criar uma chave de acesso: confirme.','Ativar biometria')){await enableBio()}openSecurityDialog()}};
-    const ch=$('#sChange');if(ch)ch.onclick=async()=>{if(await askPin('Alterar PIN','Digite o PIN atual')!==null&&await openPinSetup(true))toast('PIN alterado');openSecurityDialog()};
-    const off=$('#sOff');if(off)off.onclick=async()=>{if(await askPin('Desativar bloqueio','Digite o PIN atual')!==null){LK=null;saveLK();toast('Bloqueio desativado')}openSecurityDialog()};
+    $('#sChange').onclick=async()=>{if(await askPin('Alterar acesso',`Digite ${isPinType()?'o PIN atual':'a senha atual'}`)!==null&&await openCredSetup())toast('Acesso alterado');openSecurityDialog()};
     const bon=$('#sBioOn');if(bon)bon.onclick=async()=>{await enableBio();openSecurityDialog()};
     const boff=$('#sBioOff');if(boff)boff.onclick=()=>{delete LK.bio;saveLK();toast('Biometria desativada');openSecurityDialog()};
-    const sa=$('#sAfter');if(sa)sa.onchange=()=>{LK.after=Number(sa.value);saveLK();toast('Preferência salva')};
+    $('#sAfter').onchange=()=>{LK.after=Number($('#sAfter').value);saveLK();toast('Preferência salva')};
+    $('#sName').onchange=()=>{LK.name=$('#sName').value.trim();saveLK();toast('Nome salvo')};
   });
 }
 async function enableBio(){
   try{await bioRegister();toast('Biometria ativada')}
   catch(e){toast(e&&e.name==='NotAllowedError'?'Biometria cancelada':'Não foi possível ativar a biometria neste aparelho')}
 }
-if(LK)lockNow();
+if(LK)lockNow();else showSetup();
+
 
 initStore().then(checkShared);
 </script>
