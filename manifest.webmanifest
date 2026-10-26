@@ -54,7 +54,11 @@
             ".qfx",
             "text/plain",
             ".txt",
-            "application/octet-stream"
+            "application/octet-stream",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            ".xlsx",
+            "application/vnd.ms-excel",
+            ".xls"
           ]
         }
       ]
