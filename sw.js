@@ -1,5 +1,5 @@
 // Âncora Finances: funciona offline. Ao mudar arquivos do app, aumente a VERSAO.
-const VERSAO = 'caixa-v9';
+const VERSAO = 'caixa-v12';
 const ARQUIVOS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
@@ -40,6 +40,11 @@ self.addEventListener('fetch', e => {
     return;
   }
   if (url.origin !== location.origin) return;
+  // Configuração da conta: sempre busca a versão mais nova
+  if (url.pathname.endsWith('/firebase-config.js')) {
+    e.respondWith(fetch(req).then(r => { const cp = r.clone(); caches.open(VERSAO).then(c => c.put(req, cp)); return r; }).catch(() => caches.match(req)));
+    return;
+  }
   // Página: tenta a rede primeiro (pega atualizações), cai no cache offline
   if (req.mode === 'navigate') {
     e.respondWith(fetch(req).then(r => { const cp = r.clone(); caches.open(VERSAO).then(c => c.put('./index.html', cp)); return r; })

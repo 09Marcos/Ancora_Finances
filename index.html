@@ -8,6 +8,7 @@
 <meta name="theme-color" content="#EDF0EF" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#11171E" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.webmanifest">
+<script src="firebase-config.js"></script>
 <link rel="icon" href="icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -94,6 +95,10 @@ h3{font-size:15px;margin:0 0 8px}
 .bal{font-size:clamp(34px,6vw,52px);font-weight:800;letter-spacing:-.035em;line-height:1.05;margin:4px 0 10px}
 .bal.neg{color:var(--out)}
 .accs{display:flex;flex-wrap:wrap;gap:6px}
+.chip-btn{cursor:pointer;display:inline-flex;align-items:center;gap:5px;font:inherit;font-size:13px}
+.chip-btn:hover{border-color:var(--brand);color:var(--ink)}
+.chip-btn svg{color:var(--ink-3)}
+.lock-link.adj-link{margin-top:6px;padding:4px 0;font-size:14px}
 .chip{font-size:13px;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--ink-2)}
 .chip b{color:var(--ink);font-weight:600}
 .flow-nums{display:flex;flex-wrap:wrap;gap:8px 28px;margin-bottom:12px}
@@ -251,6 +256,9 @@ body.is-locked .top,body.is-locked main,body.is-locked .fab-wrap{visibility:hidd
 .setup-form .btn{justify-content:center;padding:12px;margin-top:6px}
 .setup-form .lock-msg{margin:2px 0;min-height:0;text-align:left}
 .setup-note{font-size:12px;color:var(--ink-3);margin-top:16px;max-width:36ch}
+.auth-tabs{width:100%;margin:6px 0 4px}.auth-tabs button{flex:1}
+.or{font-size:13px;color:var(--ink-3);margin:12px 0 4px}
+.lock-link.muted-link{color:var(--ink-3);font-weight:500;margin-top:4px}
 .lock-mark{width:64px;height:64px;border-radius:18px;background:#1D3F6E;display:flex;align-items:center;justify-content:center}
 .lock-mark svg{width:36px;height:36px}
 .lock h1{font-size:24px;letter-spacing:-.02em;margin:14px 0 4px}
@@ -271,6 +279,30 @@ body.is-locked .top,body.is-locked main,body.is-locked .fab-wrap{visibility:hidd
 .sec-row b{display:block}.sec-row small{color:var(--ink-3);font-size:13px}
 .sec-act{display:flex;gap:6px;flex-wrap:wrap}
 @media(max-width:600px){.desk-only{display:none}}
+.field input:not([type=checkbox]):not([type=radio]),.field select{width:100%;min-width:0}
+.field-row>.field{min-width:0}
+.summary b{white-space:nowrap}
+@media(max-width:420px){.field-row.stack-sm{grid-template-columns:1fr}}
+.bk{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:7px;background:var(--brand-soft);color:var(--brand);font-size:10px;font-weight:800;letter-spacing:-.02em;flex:none;vertical-align:middle}
+.bk-lg{width:38px;height:38px;border-radius:11px;font-size:13px}
+.bk-chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 14px;margin-bottom:2px}
+.bk-chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px 5px 6px;font-weight:600;font-size:14px;cursor:pointer;white-space:nowrap}
+.bk-chip[data-bank=""]{padding-left:12px}
+.bk-chip[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.bk-chip[aria-pressed="true"] .bk{background:var(--brand-ink);color:var(--brand)}
+.bk-list{display:flex;flex-direction:column;margin-top:10px}
+.bk-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;border:0;border-bottom:1px solid var(--line);background:none;padding:11px 4px;text-align:left;cursor:pointer;border-radius:0}
+.bk-row:last-child{border-bottom:0}
+.bk-row:hover{background:var(--surface-2)}
+.bk-main{min-width:0}.bk-main b{display:block}.bk-main small{color:var(--ink-3);font-size:13px}
+.bk-val{font-size:18px;font-weight:700;letter-spacing:-.01em;white-space:nowrap}.bk-val.neg{color:var(--out)}.bk-val small{font-size:12px;color:var(--ink-3);font-weight:500}
+.bal-label .bk{margin-right:4px}
+.tx-acc{display:inline-flex;align-items:center;gap:5px}.tx-acc .bk{width:18px;height:18px;font-size:8px;border-radius:5px}
+.acc-h{display:flex;gap:12px;align-items:center}
+.bk-sel{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-2)}
+.bk-sel select{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 6px;font-size:13px;max-width:170px}
+.bk-pick{display:flex;gap:8px;align-items:center}.bk-pick select{flex:1}
+.bk-auto{font-weight:500;color:var(--in);font-size:12px;margin-left:4px}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
 .seg button{border:0;background:var(--surface);padding:8px 14px;cursor:pointer;font-weight:600}
 .seg button[aria-pressed="true"]{background:var(--brand);color:var(--brand-ink)}
@@ -404,7 +436,7 @@ function categorize(desc,amt){
 
 /* ---------- Estado ---------- */
 let S = {accounts:[],tx:[],budgets:{},rules:{},fixed:[]};
-const view = {tab:'resumo',month:null,q:'',fAcc:'',fCat:'',aiText:'',aiBusy:false,aiErr:'',aiMonth:null};
+const view = {bank:'',tab:'resumo',month:null,q:'',fAcc:'',fCat:'',aiText:'',aiBusy:false,aiErr:'',aiMonth:null};
 const caps = {sample:null};
 const store = {mode:'local',db:null,uid:null,last:{},timer:null,saving:false,again:false,status:''};
 const LS_KEY='caixa:v1';
@@ -415,30 +447,29 @@ function hasData(){return S.tx.length>0||S.accounts.length>0||(S.fixed||[]).leng
 
 function setStatus(s){
   store.status=s;
-  const m={pending:'Alterações não salvas…',saving:'Salvando…',saved:'Salvo na sua conta',local:'Salvo neste celular',error:'Não foi possível salvar. Verifique o espaço livre do aparelho.'};
+  const m={loading:'Carregando seus dados…',saving:'Sincronizando…',synced:'Sincronizado com a sua conta',offline:'Sem internet: salvo no aparelho, sincroniza depois',local:'Salvo só neste aparelho',error:'Não foi possível sincronizar agora. As alterações ficam guardadas e serão enviadas depois.'};
   $('#status').textContent=m[s]||'';
 }
-function persist(){clearTimeout(store.timer);if(store.mode==='db')setStatus('pending');store.timer=setTimeout(flush,700)}
+function persist(){clearTimeout(store.timer);store.timer=setTimeout(flush,500);if(FB.mode==='cloud'&&FB.user)setStatus('saving')}
 async function flush(){
-  if(saveLocal())setStatus('local');
-  if(store.mode!=='db')return;
-  if(store.saving){store.again=true;return}
-  store.saving=true;setStatus('saving');
+  store.timer=null;
+  if(FB.mode!=='cloud'||!FB.user||!FB.col){if(saveLocal())setStatus('local');return}
+  const writes=[];const meta=JSON.stringify(metaOf(S));
+  if(meta!==FB.last.meta){writes.push(['set','meta',JSON.parse(meta)]);FB.last.meta=meta}
+  const groups={};for(const t of S.tx){const k='tx-'+monthOf(t.date);(groups[k]||(groups[k]=[])).push(t)}
+  for(const [k,items] of Object.entries(groups)){const j=JSON.stringify(items);if(FB.last[k]!==j){writes.push(['set',k,{items:JSON.parse(j)}]);FB.last[k]=j;if(j.length>900000)toast('Um mês tem lançamentos demais para sincronizar. Fale com o suporte do app.')}}
+  for(const k of Object.keys(FB.last)){if(k.startsWith('tx-')&&!groups[k]){writes.push(['del',k]);delete FB.last[k]}}
+  if(!writes.length){setStatus(navigator.onLine?'synced':'offline');return}
+  setStatus(navigator.onLine?'saving':'offline');
   try{
-    const col=store.db.collection('data/users/'+store.uid);
-    const metaObj={accounts:S.accounts,budgets:S.budgets,rules:S.rules};
-    const meta=JSON.stringify(metaObj);
-    if(meta!==store.last.meta){await col.doc('meta').set(JSON.parse(meta));store.last.meta=meta}
-    const groups={};for(const t of S.tx){(groups['tx-'+monthOf(t.date)]||(groups['tx-'+monthOf(t.date)]=[])).push(t)}
-    for(const [k,items] of Object.entries(groups)){const s=JSON.stringify(items);if(store.last[k]!==s){await col.doc(k).set({items:JSON.parse(s)});store.last[k]=s}}
-    for(const k of Object.keys(store.last)){if(k.startsWith('tx-')&&!groups[k]){await col.doc(k).delete();delete store.last[k]}}
-    setStatus('saved');
+    for(let i=0;i<writes.length;i+=400){const bt=FB.db.batch();for(const w of writes.slice(i,i+400)){if(w[0]==='set')bt.set(FB.col.doc(w[1]),w[2]);else bt.delete(FB.col.doc(w[1]))}await bt.commit()}
+    setStatus('synced');
   }catch(e){console.error(e);setStatus('error')}
-  store.saving=false;
-  if(store.again){store.again=false;flush()}
 }
+function migrateBanks(){let m=false;for(const a of S.accounts){if(!a.bank&&a.type!=='dinheiro'){const b=BANKS.find(b=>b.re.test(norm(a.name)));if(b){a.bank=b.id;m=true}}}return m}
 async function initStore(){
   const local=loadLocal(); if(local){S={accounts:[],budgets:{},rules:{},fixed:[],...local}}
+  let mig=false;for(const a of S.accounts){if(!a.bank&&a.type!=='dinheiro'){const b=BANKS.find(b=>b.re.test(norm(a.name)));if(b){a.bank=b.id;mig=true}}}if(mig)saveLocal();
   setStatus(hasData()?'local':'');
   pickDefaultMonth(); render();
   try{if(navigator.storage&&navigator.storage.persist)await navigator.storage.persist()}catch(e){}
@@ -576,8 +607,9 @@ function render(){
   $('#fabWrap').hidden=!hasData();
   const app=$('#app');
   if(!S.tx.length&&!S.accounts.length&&!(S.fixed||[]).length&&view.tab!=='contas'&&view.tab!=='fixas'){app.innerHTML=emptyHTML();bindEmpty();return}
-  if(view.tab==='resumo'){app.innerHTML=resumoHTML();bindResumo()}
-  else if(view.tab==='tx'){app.innerHTML=txHTML();bindTx()}
+  if(view.bank&&!S.accounts.some(a=>bankKey(a)===view.bank))view.bank='';
+  if(view.tab==='resumo'){app.innerHTML=bankChipsHTML()+withScope(resumoHTML);bindResumo();bindBankChips()}
+  else if(view.tab==='tx'){app.innerHTML=bankChipsHTML()+withScope(txHTML);bindTx();bindBankChips()}
   else if(view.tab==='orc'){app.innerHTML=orcHTML();bindOrc()}
   else if(view.tab==='fixas'){app.innerHTML=fixasHTML();bindFixas()}
   else {app.innerHTML=contasHTML();bindContas()}
@@ -592,6 +624,7 @@ function emptyHTML(){
 }
 function bindEmpty(){const ef=$('#eFix');if(ef)ef.onclick=()=>{view.tab='fixas';render()};$('#eImport').onclick=pickFile;$('#eDemo').onclick=loadDemo;$('#eManual').onclick=()=>openTxDialog()}
 
+const PEN='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>';
 function resumoHTML(){
   const m=view.month,st=monthStats(m),avg=avgPrev(m);
   const banks=bankAccs(),cards=cardAccs();const bal=totalBank(null);
@@ -603,16 +636,18 @@ function resumoHTML(){
   const top=Object.values(st.byMerchant).sort((a,b)=>b.total-a.total).slice(0,6);
   const rec=recurring(m).slice(0,6);
   const demo=S.accounts.some(a=>a.demo);
+  const scoped=!!view.bank,gname=scoped?groupInfo(view.bank).n:'';
   return `
   ${staleHTML()}
   ${fxResumoHTML()}
   ${demo?`<div class="in-item atencao" style="margin-bottom:16px"><strong>Você está vendo dados de exemplo</strong><p>Quando quiser usar com seus dados, <button class="btn small" id="rmDemo">remova o exemplo</button> e importe o extrato do seu banco.</p></div>`:''}
   <section class="hero">
     <div>
-      <div class="bal-label">Saldo em contas hoje</div>
+      <div class="bal-label">${scoped?`${badge(view.bank)} Saldo no ${esc(gname)} hoje`:'Saldo em contas hoje'}</div>
       <div class="bal num ${bal<0?'neg':''}">${banks.length?money(bal):'—'}</div>
-      <div class="accs">${banks.map(a=>`<span class="chip">${esc(a.name)} <b class="num">${money(accBalance(a))}</b></span>`).join('')}
-      ${cards.map(a=>{const b=accBalance(a);return `<span class="chip">${esc(a.name)} <b class="num">${b<0?'fatura '+money(-b):money(b)}</b></span>`}).join('')}</div>
+      <div class="accs">${banks.map(a=>`<button class="chip chip-btn" data-adj="${a.id}" title="Corrigir saldo de ${esc(a.name)}">${esc(a.name)} <b class="num">${money(accBalance(a))}</b>${PEN}</button>`).join('')}
+      ${cards.map(a=>{const b=accBalance(a);return `<button class="chip chip-btn" data-adj="${a.id}" title="Corrigir fatura de ${esc(a.name)}">${esc(a.name)} <b class="num">${b<0?'fatura '+money(-b):money(b)}</b>${PEN}</button>`}).join('')}</div>
+      ${S.accounts.length?`<button class="lock-link adj-link" id="adjBal">Corrigir saldo</button>`:''}
     </div>
     <div>
       <div class="flow-nums num">
@@ -628,6 +663,7 @@ function resumoHTML(){
     </div>
   </section>
 
+  ${scoped?'':bankPanelHTML()}
   <div class="grid two">
     <section class="panel">
       <h2>Gastos por categoria</h2>
@@ -679,6 +715,8 @@ function staleHTML(){
 }
 function bindResumo(){
   const rm=$('#rmDemo');if(rm)rm.onclick=removeDemo;
+  document.querySelectorAll('[data-adj]').forEach(b=>b.onclick=()=>openBalDialog(b.dataset.adj));
+  const ab=$('#adjBal');if(ab)ab.onclick=()=>openBalDialog();
   const si=$('#staleImp');if(si)si.onclick=pickFile;
   const gf=$('#goFx');if(gf)gf.onclick=()=>{view.tab='fixas';render();window.scrollTo(0,0)};
 }
@@ -708,7 +746,7 @@ function txHTML(){
   ${Object.keys(days).length?Object.entries(days).map(([d,ts])=>`<div class="day"><div class="day-h"><span>${dayLabel(d)}</span><span class="num">${money(ts.reduce((s,t)=>s+t.amt,0))}</span></div>
     ${ts.map(t=>`<div class="tx" data-id="${t.id}">
       <div style="min-width:0"><div class="tx-desc" title="${esc(t.desc)}">${esc(cleanName(t.desc))}</div>
-      <div class="tx-meta"><i class="dot" style="background:${CAT[t.cat]?.color||'#999'}"></i><select data-cat aria-label="Categoria">${catOptions(t.cat)}</select><span>${esc(acc[t.acc]?.name||'Sem conta')}</span></div></div>
+      <div class="tx-meta"><i class="dot" style="background:${CAT[t.cat]?.color||'#999'}"></i><select data-cat aria-label="Categoria">${catOptions(t.cat)}</select><span class="tx-acc">${acc[t.acc]?badge(bankKey(acc[t.acc])):''}${esc(acc[t.acc]?.name||'Sem conta')}</span></div></div>
       <div><div class="tx-amt num ${t.amt>0?'pos':''}">${t.amt>0?'+':''}${money(t.amt)}</div><div class="tx-act"><button class="icon-btn" data-del aria-label="Excluir lançamento">Excluir</button></div></div>
     </div>`).join('')}</div>`).join(''):`<div class="panel" style="margin-top:16px"><p class="muted" style="margin:0">Nenhum lançamento encontrado em ${monthLabel(m).toLowerCase()}.</p></div>`}`;
 }
@@ -768,9 +806,9 @@ function contasHTML(){
   <section class="panel">
     <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><h2 style="margin:0">Suas contas</h2><button class="btn small" id="newAcc">Nova conta</button></div>
     ${S.accounts.length?S.accounts.map(a=>{const n=S.tx.filter(t=>t.acc===a.id);const last=n.map(t=>t.date).sort().pop();const b=accBalance(a);
-      return `<div class="acc"><div><b>${esc(a.name)}</b><div class="muted" style="font-size:13px">${TYPE_NAME[a.type]||''} · ${n.length} lançamentos${last?' · último em '+fmtDate(last):''}${a.anchorDate?' · saldo conferido em '+fmtDate(a.anchorDate):''}</div></div>
+      return `<div class="acc"><div class="acc-h">${badge(bankKey(a),true)}<div><b>${esc(a.name)}</b><div class="muted" style="font-size:13px">${TYPE_NAME[a.type]||''} · ${n.length} lançamentos${last?' · último em '+fmtDate(last):''}${a.anchorDate?' · saldo conferido em '+fmtDate(a.anchorDate):''}</div></div></div>
       <b class="num" style="color:${b<0?'var(--out)':'inherit'}">${a.type==='cartao'&&b<0?'fatura '+money(-b):money(b)}</b>
-      <div class="acc-act"><button class="btn small" data-bal="${a.id}">${a.type==='cartao'?'Informar fatura atual':'Informar saldo atual'}</button><button class="btn small" data-ren="${a.id}">Renomear</button><button class="btn small danger" data-delacc="${a.id}">Excluir conta</button></div></div>`}).join('')
+      <div class="acc-act"><label class="bk-sel">Banco <select data-accbank="${a.id}" aria-label="Banco de ${esc(a.name)}">${bankOptions(a.bank)}</select></label><button class="btn small" data-bal="${a.id}">${a.type==='cartao'?'Corrigir fatura atual':'Corrigir saldo atual'}</button><button class="btn small" data-ren="${a.id}">Renomear</button><button class="btn small danger" data-delacc="${a.id}">Excluir conta</button></div></div>`}).join('')
     :`<p class="muted">Nenhuma conta ainda. Ao importar um extrato, a conta é criada automaticamente.</p>`}
   </section>
   <section class="panel">
@@ -783,23 +821,114 @@ function contasHTML(){
     <button class="btn primary" id="cImport" style="margin-top:8px">Importar extrato</button>
     <p class="muted" style="font-size:13px;margin-top:14px">Funciona com a maioria dos bancos brasileiros: Nubank, Itaú, Bradesco, Banco do Brasil, Caixa, Santander, Inter, C6 e outros. O arquivo OFX traz também o saldo, que o Âncora usa para conferir a conta.</p>
     <h3 style="margin-top:18px">Onde ficam seus dados</h3>
-    <p class="muted" style="font-size:14px;margin-top:0">Somente neste aparelho, sem enviar nada para servidores. Se desinstalar o app ou limpar os dados do navegador, eles serão apagados, então baixe uma cópia de segurança de vez em quando${S.lastBackup?` (a última foi em ${fmtDate(S.lastBackup)})`:''}.</p>
+    <p class="muted" style="font-size:14px;margin-top:0">${FB.user?`Na sua conta (${esc(FB.user.email)}), protegida por e-mail e senha, e sincronizados entre o celular e o computador. A cópia de segurança continua disponível como garantia extra`:'Somente neste aparelho, sem enviar nada para servidores. Se desinstalar o app ou limpar os dados do navegador, eles serão apagados, então baixe uma cópia de segurança de vez em quando'}${S.lastBackup?` (a última foi em ${fmtDate(S.lastBackup)})`:''}.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"><button class="btn small" id="bkOut">Baixar cópia de segurança</button><button class="btn small" id="bkIn">Restaurar cópia</button></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">${S.accounts.some(a=>a.demo)?`<button class="btn small" id="rmDemo2">Remover dados de exemplo</button>`:`<button class="btn small" id="demo2">Carregar dados de exemplo</button>`}<button class="btn small danger" id="wipe">Apagar todos os dados</button></div>
   </section></div>`;
 }
 function bindContas(){
+  document.querySelectorAll('[data-accbank]').forEach(sel=>sel.onchange=()=>{const a=S.accounts.find(x=>x.id===sel.dataset.accbank);a.bank=sel.value||undefined;if(!a.bank)delete a.bank;persist();render();toast(sel.value?`${a.name}: ${BANK[sel.value].n}`:'Banco removido')});
   $('#cImport').onclick=pickFile;
   $('#newAcc').onclick=()=>openAccDialog();
   $('#bkOut').onclick=exportBackup;
   $('#bkIn').onclick=()=>{skipLockOnce=true;const f=$('#bkFile');f.value='';f.click()};
   const d=$('#demo2');if(d)d.onclick=loadDemo;
   const r=$('#rmDemo2');if(r)r.onclick=removeDemo;
-  $('#wipe').onclick=async()=>{if(await askConfirm('Apagar todos os dados','Todas as contas, lançamentos, contas fixas, orçamentos e regras de categoria serão apagados. Isso não pode ser desfeito.','Apagar tudo',true)){S={accounts:[],tx:[],budgets:{},rules:{},fixed:[]};persist();render();toast('Todos os dados foram apagados')}};
+  $('#wipe').onclick=async()=>{if(await askConfirm('Apagar todos os dados','Todas as contas, lançamentos, contas fixas, orçamentos e regras de categoria serão apagados da sua conta, em todos os aparelhos. Isso não pode ser desfeito.','Apagar tudo',true)){S={accounts:[],tx:[],budgets:{},rules:{},fixed:[]};persist();render();toast('Todos os dados foram apagados')}};
   document.querySelectorAll('[data-bal]').forEach(b=>b.onclick=()=>openBalDialog(b.dataset.bal));
   document.querySelectorAll('[data-ren]').forEach(b=>b.onclick=async()=>{const a=S.accounts.find(x=>x.id===b.dataset.ren);const n=await askText('Renomear conta','Nome da conta',a.name,'Salvar nome');if(n&&n.trim()){a.name=n.trim();persist();render()}});
   document.querySelectorAll('[data-delacc]').forEach(b=>b.onclick=async()=>{const a=S.accounts.find(x=>x.id===b.dataset.delacc);const n=S.tx.filter(t=>t.acc===a.id).length;
     if(await askConfirm('Excluir conta',`"${a.name}" e seus ${n} lançamentos serão excluídos.`,'Excluir conta',true)){S.accounts=S.accounts.filter(x=>x!==a);S.tx=S.tx.filter(t=>t.acc!==a.id);persist();render();toast('Conta excluída')}});
+}
+
+/* ---------- Bancos ---------- */
+const BANKS=[
+ ['nubank','Nubank','NB',['260'],/\bnubank\b|nu pagamentos|nu financeira|nuconta/],
+ ['mercadopago','Mercado Pago','MP',['323'],/mercado ?pago/],
+ ['santander','Santander','ST',['033','33'],/santander/],
+ ['itau','Itaú','IT',['341','184','029','652'],/\bitau\b|itau unibanco|personnalite/],
+ ['bradesco','Bradesco','BD',['237','394'],/bradesco/],
+ ['bb','Banco do Brasil','BB',['001','1'],/banco do brasil|bancodobrasil/],
+ ['caixa','Caixa','CX',['104'],/caixa economica|caixa econ|\bcef\b/],
+ ['inter','Inter','IN',['077','77'],/banco inter\b|bancointer|inter ?& ?co|\binter s\.?a\b/],
+ ['c6','C6 Bank','C6',['336'],/\bc6 ?bank\b|banco c6\b/],
+ ['picpay','PicPay','PP',['380'],/picpay/],
+ ['pagbank','PagBank','PB',['290'],/pagbank|pagseguro/],
+ ['btg','BTG Pactual','BT',['208'],/\bbtg\b/],
+ ['xp','XP','XP',['102','348'],/xp investimentos|banco xp\b/],
+ ['rico','Rico','RC',[],/rico investimentos|rico corretora/],
+ ['sicoob','Sicoob','SC',['756'],/sicoob/],
+ ['sicredi','Sicredi','SR',['748'],/sicredi/],
+ ['banrisul','Banrisul','BS',['041','41'],/banrisul/],
+ ['neon','Neon','NE',['735','655'],/\bneon\b/],
+ ['next','Next','NX',[],/banco next\b|\bnext\b.{0,20}bradesco/],
+ ['original','Banco Original','OR',['212'],/banco original/],
+ ['safra','Safra','SF',['422'],/\bsafra\b/],
+ ['pan','Banco Pan','PN',['623'],/banco pan\b/],
+ ['will','Will Bank','WB',['280'],/will ?bank/],
+ ['agibank','Agibank','AG',['121'],/agibank|agiplan/],
+ ['digio','Digio','DG',['335'],/\bdigio\b/],
+ ['bmg','Banco BMG','BM',['318'],/\bbmg\b/],
+ ['brb','BRB','BR',['070','70'],/\bbrb\b|banco de brasilia/],
+ ['banestes','Banestes','BE',['021','21'],/banestes/],
+ ['bnb','Banco do Nordeste','BN',['004','4'],/banco do nordeste/],
+ ['cora','Cora','CO',['403'],/\bcora scd\b|banco cora\b/],
+ ['stone','Stone','SN',['197'],/\bstone (pagamentos|instituicao)/]
+].map(([id,n,ab,codes,re])=>({id,n,ab,codes,re}));
+const BANK=Object.fromEntries(BANKS.map(b=>[b.id,b]));
+function detectBank({lines=[],fileName='',codes=[],header=''}){
+  for(const c of codes){const k=String(c||'').replace(/\D/g,'');if(!k)continue;const b=BANKS.find(b=>b.codes.includes(k)||b.codes.includes(k.padStart(3,'0')));if(b)return b.id}
+  const sc={};const add=(id,v)=>sc[id]=(sc[id]||0)+v;
+  const fn=norm(fileName);for(const b of BANKS)if(b.re.test(fn))add(b.id,10);
+  const h=norm(header);if(h){if(/^date,title,amount|^date,category,title,amount|^data,valor,identificador,descricao/.test(h.replace(/\s/g,'')))add('nubank',8);for(const b of BANKS)if(b.re.test(h))add(b.id,5)}
+  const capped={};const N=lines.length;
+  lines.forEach((l,i)=>{const n=norm(l);if(!n.trim())return;const hasAmt=/\d,\d{2}\b/.test(n);
+    const w=i<15?5:i>=N-10?4:hasAmt?0.2:1;
+    for(const b of BANKS)if(b.re.test(n)){if(hasAmt&&i>=15&&i<N-10){capped[b.id]=(capped[b.id]||0)+w;if(capped[b.id]>0.9)continue}add(b.id,w)}});
+  const best=Object.entries(sc).sort((a,b)=>b[1]-a[1])[0];
+  return best&&best[1]>=1.5?best[0]:'';
+}
+function initials(name){const w=String(name||'').replace(/\(.*?\)/g,'').trim().split(/\s+/).filter(x=>x.length>1&&!/^(de|da|do|conta|cartao|cartão|corrente)$/i.test(x));return ((w[0]||'?')[0]+((w[1]||w[0]||'')[w[1]?0:1]||'')).toUpperCase()}
+const bankKey=a=>a.bank||(a.type==='dinheiro'?'dinheiro':'acc:'+a.id);
+function groupInfo(key){
+  if(BANK[key])return {n:BANK[key].n,ab:BANK[key].ab};
+  if(key==='dinheiro')return {n:'Dinheiro',ab:'R$'};
+  const a=S.accounts.find(x=>'acc:'+x.id===key);return {n:a?a.name:'Outra conta',ab:initials(a?a.name:'')};
+}
+function bankGroups(){const ks=[];for(const a of S.accounts){const k=bankKey(a);if(!ks.includes(k))ks.push(k)}return ks}
+const badge=(key,big)=>`<span class="bk${big?' bk-lg':''}" aria-hidden="true">${esc(groupInfo(key).ab)}</span>`;
+function bankOptions(sel){return `<option value="">Outro ou não sei</option>${BANKS.map(b=>`<option value="${b.id}" ${b.id===sel?'selected':''}>${esc(b.n)}</option>`).join('')}`}
+function withScope(fn){
+  if(!view.bank)return fn();
+  const keep=S;const accs=S.accounts.filter(a=>bankKey(a)===view.bank);
+  if(!accs.length){view.bank='';return fn()}
+  const ids=new Set(accs.map(a=>a.id));
+  S={...keep,accounts:accs,tx:keep.tx.filter(t=>ids.has(t.acc)),budgets:{},fixed:[]};
+  try{return fn()}finally{S=keep}
+}
+function bankChipsHTML(){
+  const gs=bankGroups();if(gs.length<2)return'';
+  return `<div class="bk-chips" role="group" aria-label="Filtrar por banco"><button class="bk-chip" data-bank="" aria-pressed="${!view.bank}">Todos os bancos</button>${gs.map(k=>`<button class="bk-chip" data-bank="${esc(k)}" aria-pressed="${view.bank===k}">${badge(k)}<span>${esc(groupInfo(k).n)}</span></button>`).join('')}</div>`;
+}
+function bindBankChips(){document.querySelectorAll('[data-bank]').forEach(b=>b.onclick=()=>{view.bank=b.dataset.bank;view.fAcc='';render();window.scrollTo(0,0)})}
+function bankPanelHTML(){
+  const gs=bankGroups();if(!gs.length)return'';
+  const m=view.month;
+  const rows=gs.map(k=>{
+    const accs=S.accounts.filter(a=>bankKey(a)===k);const ids=new Set(accs.map(a=>a.id));
+    const bal=accs.filter(a=>a.type!=='cartao').reduce((s,a)=>s+accBalance(a),0);
+    const hasBank=accs.some(a=>a.type!=='cartao');
+    const fat=accs.filter(a=>a.type==='cartao').reduce((s,a)=>s+Math.max(0,-accBalance(a)),0);
+    const hasCard=accs.some(a=>a.type==='cartao');
+    let out=0;for(const t of S.tx)if(ids.has(t.acc)&&t.date.startsWith(m)&&CAT[t.cat]?.kind==='gasto')out-=t.amt;
+    return {k,bal,hasBank,fat,hasCard,out};
+  });
+  const tot=rows.reduce((s,r)=>s+(r.hasBank?r.bal:0),0);
+  return `<section class="panel" style="margin-top:16px"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap"><h2 style="margin:0">Saldo por banco</h2><span class="muted num" style="font-size:14px">Total em contas: <b style="color:var(--ink)">${money(tot)}</b></span></div>
+  <div class="bk-list">${rows.map(r=>`<button class="bk-row" data-bank="${esc(r.k)}" aria-label="Ver análise de ${esc(groupInfo(r.k).n)}">${badge(r.k,true)}
+    <span class="bk-main"><b>${esc(groupInfo(r.k).n)}</b><small class="num">${[r.hasCard?`fatura ${money(r.fat)}`:'',r.out>0?`gastos em ${monthLabel(m,true)}: ${money(r.out)}`:''].filter(Boolean).join(' · ')||'sem gastos no mês'}</small></span>
+    <span class="bk-val num ${r.hasBank&&r.bal<0?'neg':''}">${r.hasBank?money(r.bal):r.hasCard?`<small>fatura</small> ${money(r.fat)}`:'—'}</span></button>`).join('')}</div>
+  <p class="muted" style="font-size:13px;margin:10px 0 0">Toque num banco para ver a análise só dele. O banco de cada conta pode ser trocado em Bancos e importação.</p></section>`;
 }
 
 /* ---------- Contas fixas ---------- */
@@ -1110,30 +1239,71 @@ function openTxDialog(){
 }
 function openAccDialog(){
   openDlg(`<h2>Nova conta</h2>
+  <div class="field"><label for="aBank">Banco</label><select id="aBank">${bankOptions('')}</select></div>
   <div class="field"><label for="aName">Nome</label><input id="aName" placeholder="Ex.: Itaú corrente"></div>
   <div class="field-row"><div class="field"><label for="aType">Tipo</label><select id="aType"><option value="corrente">Conta corrente</option><option value="poupanca">Poupança</option><option value="cartao">Cartão de crédito</option><option value="dinheiro">Dinheiro (carteira)</option></select></div>
   <div class="field"><label for="aBal">Saldo atual (R$)</label><input id="aBal" inputmode="decimal" placeholder="0,00"></div></div>
   <div class="dlg-act"><button class="btn" id="aCancel">Cancelar</button><button class="btn primary" id="aSave">Criar conta</button></div>`,()=>{
     $('#aCancel').onclick=closeDlg;
-    $('#aSave').onclick=()=>{const name=$('#aName').value.trim()||'Minha conta',type=$('#aType').value;let b=parseNum($('#aBal').value);if(!isFinite(b))b=0;if(type==='cartao')b=-Math.abs(b);
-      S.accounts.push({id:uid(),name,type,initial:0,anchorAmt:round2(b),anchorDate:todayISO()});persist();closeDlg();render();toast('Conta criada')};
+    $('#aBank').onchange=()=>{const b=BANK[$('#aBank').value];if(b&&!$('#aName').value.trim())$('#aName').value=b.n+($('#aType').value==='cartao'?' cartão':' conta')};
+    $('#aSave').onclick=()=>{const bk=$('#aBank').value;const name=$('#aName').value.trim()||(BANK[bk]?BANK[bk].n:'Minha conta'),type=$('#aType').value;let b=parseNum($('#aBal').value);if(!isFinite(b))b=0;if(type==='cartao')b=-Math.abs(b);
+      S.accounts.push({id:uid(),name,type,initial:0,anchorAmt:round2(b),anchorDate:todayISO(),...(bk?{bank:bk}:{})});persist();closeDlg();render();toast('Conta criada')};
   });
 }
 function openBalDialog(id){
-  const a=S.accounts.find(x=>x.id===id);const card=a.type==='cartao';
-  openDlg(`<h2>${card?'Fatura atual':'Saldo atual'} de ${esc(a.name)}</h2>
-  <p class="muted" style="margin-top:0">${card?'Informe o valor da fatura em aberto hoje.':'Informe o saldo que aparece hoje no app do banco.'} O Âncora usa esse valor como referência e recalcula o saldo a partir dos lançamentos.</p>
-  <div class="field"><label for="bVal">Valor (R$)</label><input id="bVal" inputmode="decimal" value="${String(Math.abs(accBalance(a))).replace('.',',')}"></div>
-  <div class="dlg-act"><button class="btn" id="bCancel">Cancelar</button><button class="btn primary" id="bSave">Salvar saldo</button></div>`,()=>{
-    $('#bCancel').onclick=closeDlg;
-    $('#bSave').onclick=()=>{let v=parseNum($('#bVal').value);if(!isFinite(v))return;if(card)v=-Math.abs(v);a.anchorAmt=round2(v);a.anchorDate=todayISO();persist();closeDlg();render();toast('Saldo salvo')};
-  });
+  if(!S.accounts.length){
+    openDlg(`<h2>Corrigir saldo</h2><p class="muted">Você ainda não tem contas. Crie uma conta e informe o saldo atual dela.</p><div class="dlg-act"><button class="btn" id="bCancel">Cancelar</button><button class="btn primary" id="bNew">Criar conta</button></div>`,()=>{$('#bCancel').onclick=closeDlg;$('#bNew').onclick=()=>{closeDlg();openAccDialog()}});return;
+  }
+  let a=S.accounts.find(x=>x.id===id)||bankAccs()[0]||S.accounts[0];
+  const draw=()=>{
+    const card=a.type==='cartao',cur=accBalance(a);
+    openDlg(`<h2>${card?'Corrigir fatura atual':'Corrigir saldo atual'}</h2>
+    ${S.accounts.length>1?`<div class="field"><label for="bAcc">Conta</label><select id="bAcc">${S.accounts.map(x=>`<option value="${x.id}" ${x.id===a.id?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div>`:`<p style="margin:0 0 10px"><b>${esc(a.name)}</b></p>`}
+    <div class="summary num"><div><span>${card?'Fatura calculada pelo app':'Saldo calculado pelo app'}</span><b>${card?money(Math.max(0,-cur)):money(cur)}</b></div>${a.anchorDate?`<div><span>Última correção</span><b>${fmtDate(a.anchorDate)}</b></div>`:''}</div>
+    <div class="field-row stack-sm">
+      <div class="field"><label for="bVal">${card?'Valor correto da fatura (R$)':'Saldo correto (R$)'}</label><input id="bVal" inputmode="decimal" placeholder="${card?'0,00':'Use - se estiver negativo'}" autocomplete="off"></div>
+      <div class="field"><label for="bDate">${card?'Fatura em':'Saldo em'}</label><input id="bDate" type="date" value="${todayISO()}" max="${todayISO()}"></div>
+    </div>
+    <p class="muted" id="bDiff" style="font-size:14px;margin:0;min-height:1.4em"></p>
+    <p class="muted" style="font-size:13px">${card?'Use o valor em aberto que aparece no app do banco.':'Copie o saldo que aparece no app do banco.'} Os lançamentos com data depois do dia informado continuam sendo somados a partir desse valor.</p>
+    <p id="bErr" style="color:var(--out);margin:0"></p>
+    <div class="dlg-act"><button class="btn" id="bCancel">Cancelar</button><button class="btn primary" id="bSave">${card?'Salvar fatura':'Salvar saldo'}</button></div>`,()=>{
+      const sel=$('#bAcc');if(sel)sel.onchange=()=>{a=S.accounts.find(x=>x.id===sel.value);dlgCb=null;draw()};
+      const calc=()=>{
+        let v=parseNum($('#bVal').value);if(!isFinite(v)){$('#bDiff').textContent='';return null}
+        if(card)v=-Math.abs(v);
+        const d=$('#bDate').value||todayISO();
+        const now=round2(v+S.tx.filter(t=>t.acc===a.id&&t.date>d).reduce((s,t)=>s+t.amt,0));
+        const diff=round2(now-cur);
+        $('#bDiff').innerHTML=Math.abs(diff)<0.005?'O valor já confere com o app.':`${card?'Fatura':'Saldo'} hoje passa a ser <b>${card?money(Math.max(0,-now)):money(now)}</b> (${diff>0?'+':''}${money(card?-diff:diff)} em relação ao calculado).`;
+        return {v,d};
+      };
+      $('#bVal').oninput=calc;$('#bDate').onchange=calc;
+      $('#bVal').onkeydown=e=>{if(e.key==='Enter')$('#bSave').click()};
+      $('#bCancel').onclick=closeDlg;
+      $('#bSave').onclick=()=>{
+        const r=calc();if(!r){$('#bErr').textContent=card?'Digite o valor da fatura.':'Digite o saldo.';$('#bVal').focus();return}
+        if(r.d>todayISO()){$('#bErr').textContent='A data não pode ser no futuro.';return}
+        a.anchorAmt=round2(r.v);a.anchorDate=r.d;persist();closeDlg();render();toast(card?'Fatura corrigida':`Saldo de ${a.name} corrigido`);
+      };
+      setTimeout(()=>{const i=$('#bVal');i&&i.focus()},40);
+    });
+  };
+  draw();
 }
 
 /* ---------- Importação ---------- */
 function pickFile(){skipLockOnce=true;const f=$('#file');f.value='';f.click()}
 $('#file').onchange=e=>{const fs=[...e.target.files];if(fs.length)importFiles(fs)};
 async function parseFile(file){
+  const p=await parseFileRaw(file);
+  if(p&&p.kind!=='planilha'){
+    const bid=detectBank({lines:p._lines||[],fileName:file.name,codes:p.codes||[],header:[p.bank||'',p._header||''].join('\n')});
+    p.bankId=bid;p.bankAuto=!!bid;delete p._lines;
+  }
+  return p;
+}
+async function parseFileRaw(file){
   const buf=await file.arrayBuffer();
   const head=new TextDecoder('latin1').decode(buf.slice(0,8));
   if(/\.(xlsx|xlsm|xls|ods)$/i.test(file.name)||head.startsWith('PK\u0003\u0004')||head.startsWith('\u00d0\u00cf\u0011\u00e0')){
@@ -1146,11 +1316,12 @@ async function parseFile(file){
     toast('Lendo o PDF…');
     const lines=await readPdf(buf);
     if(lines.filter(l=>l.trim()).length<3)throw new Error('Este PDF parece ser uma imagem digitalizada, sem texto para ler.');
-    return parsePdfLines(lines);
+    const r=parsePdfLines(lines);r._lines=lines;return r;
   }
   let text=new TextDecoder('utf-8').decode(buf);
   if(text.includes('\uFFFD'))text=new TextDecoder('windows-1252').decode(buf);
-  return /<OFX>|OFXHEADER|<STMTTRN>/i.test(text)?parseOFX(text):parseCSV(text);
+  if(/<OFX>|OFXHEADER|<STMTTRN>/i.test(text))return parseOFX(text);
+  const r=parseCSV(text);const ls=text.split(/\r?\n/);r._header=ls.find(l=>l.trim())||'';r._lines=ls.slice(0,15).concat(ls.slice(-10));return r;
 }
 let importing=false;
 async function importFiles(files){
@@ -1199,7 +1370,7 @@ function parseOFX(text){
   let balance=null,balDate=null;const lb=text.split(/<LEDGERBAL>/i)[1];
   if(lb){const v=parseNum(get(lb,'BALAMT'));if(isFinite(v)){balance=round2(v);balDate=parseDate(get(lb,'DTASOF'))}}
   if(balDate&&balDate>todayISO())balDate=todayISO();
-  return {format:'OFX',isCard,bank:get(text,'ORG'),acctid:get(text,'ACCTID'),tx,balance,balDate};
+  return {format:'OFX',isCard,bank:get(text,'ORG'),codes:[get(text,'BANKID'),get(text,'FID')],acctid:get(text,'ACCTID'),tx,balance,balDate};
 }
 function csvRows(text){
   const first=text.split(/\r?\n/).find(l=>l.trim())||'';
@@ -1352,11 +1523,15 @@ function parsePdfLines(lines){
 
 function openImportDialog(p){return new Promise(resolve=>{
   const dates=p.tx.map(t=>t.date).sort();
-  const same=S.accounts.filter(a=>!a.demo&&a.type!=='dinheiro'&&((a.type==='cartao')===!!p.isCard));
+  const same0=S.accounts.filter(a=>!a.demo&&a.type!=='dinheiro'&&((a.type==='cartao')===!!p.isCard));
+  const sameBank=p.bankId?same0.filter(a=>a.bank===p.bankId):[];
+  const same=p.bankId?(sameBank.length?sameBank:same0.filter(a=>!a.bank)):same0;
   const sameFmt=same.filter(a=>a.lastFormat===p.format);
   const match=S.accounts.find(a=>p.acctid&&a.acctid===p.acctid)||(same.length===1?same[0]:sameFmt.length===1?sameFmt[0]:null);
   const defType=p.isCard?'cartao':'corrente';
-  const defName=p.bank?cleanName(p.bank)+' '+(p.isCard?'cartão':'conta')+(p.acctid?' '+p.acctid.slice(-4):''):(p.isCard?'Cartão de crédito':'Conta corrente');
+  const bnm=()=>BANK[p.bankId]?BANK[p.bankId].n:(p.bank?cleanName(p.bank):'');
+  const mkName=()=>bnm()?bnm()+' '+(p.isCard?'cartão':'conta'):(p.isCard?'Cartão de crédito':'Conta corrente');
+  const defName=mkName();
   const inc=p.tx.filter(t=>t.amt>0).reduce((s,t)=>s+t.amt,0),out=p.tx.filter(t=>t.amt<0).reduce((s,t)=>s-t.amt,0);
   openDlg(`${p.step?`<p class="muted" style="margin:0 0 4px;font-size:13px">${p.step}</p>`:''}<h2>Importar ${esc(p.fileName)}</h2>
   <div class="summary num">
@@ -1366,9 +1541,10 @@ function openImportDialog(p){return new Promise(resolve=>{
     <div><span>Entradas / saídas</span><b>${money(inc)} / ${money(out)}</b></div>
     ${p.balance!=null?`<div><span>Saldo informado pelo banco</span><b>${money(p.balance)}</b></div>`:''}
   </div>
+  <div class="field"><label for="iBank">Banco${p.bankAuto?' <span class="bk-auto">identificado automaticamente</span>':''}</label><div class="bk-pick">${badge(p.bankId||'acc:?')}<select id="iBank">${bankOptions(p.bankId)}</select></div></div>
   <div class="field"><label for="iAcc">Salvar na conta</label><select id="iAcc">${S.accounts.map(a=>`<option value="${a.id}" ${match&&match.id===a.id?'selected':''}>${esc(a.name)}</option>`).join('')}<option value="__new" ${match?'':'selected'}>Criar nova conta</option></select></div>
   <div id="newBox">
-    <div class="field-row"><div class="field"><label for="iName">Nome da conta</label><input id="iName" value="${esc(defName.trim())}"></div>
+    <div class="field-row stack-sm"><div class="field"><label for="iName">Nome da conta</label><input id="iName" value="${esc(defName.trim())}"></div>
     <div class="field"><label for="iType">Tipo</label><select id="iType">${Object.entries(TYPE_NAME).map(([k,v])=>`<option value="${k}" ${k===defType?'selected':''}>${v}</option>`).join('')}</select></div></div>
     ${p.balance==null?`<div class="field"><label for="iBal">Saldo atual da conta (opcional)</label><input id="iBal" inputmode="decimal" placeholder="Como aparece hoje no app do banco"></div>`:''}
   </div>
@@ -1378,6 +1554,8 @@ function openImportDialog(p){return new Promise(resolve=>{
   <p class="muted" style="font-size:13px;margin:0">Lançamentos já importados antes são ignorados automaticamente.${p.balance!=null?' O saldo do arquivo será usado para conferir a conta.':''}</p>
   <div class="dlg-act"><button class="btn" id="iCancel">${p.step?'Pular arquivo':'Cancelar'}</button><button class="btn primary" id="iGo">Importar ${p.tx.length} lançamentos</button></div>`,()=>{
     const sync=()=>{$('#newBox').hidden=$('#iAcc').value!=='__new'};sync();$('#iAcc').onchange=sync;
+    $('#iBank').onchange=()=>{const old=mkName();p.bankId=$('#iBank').value;const bp=dlg.querySelector('.bk-pick .bk');if(bp)bp.textContent=BANK[p.bankId]?BANK[p.bankId].ab:'?';if($('#iName').value.trim()===old||!$('#iName').value.trim())$('#iName').value=mkName();
+      const m2=S.accounts.find(a=>a.bank===p.bankId&&a.type!=='dinheiro'&&((a.type==='cartao')===!!p.isCard));if(m2){$('#iAcc').value=m2.id;sync()}};
     const cnt=()=>{const n=p.tx.filter(t=>!t.skip).length;$('#iGo').textContent=`Importar ${n} lançamento${n===1?'':'s'}`;$('#iGo').disabled=!n};
     dlg.querySelectorAll('#rev input[data-i]').forEach(c=>c.onchange=()=>{p.tx[c.dataset.i].skip=!c.checked;cnt()});
     dlg.querySelectorAll('#rev [data-s]').forEach(b=>b.onclick=()=>{const t=p.tx[b.dataset.s];t.amt=-t.amt;t.guess=false;b.textContent=money(t.amt);b.classList.toggle('pos',t.amt>0)});
@@ -1385,14 +1563,14 @@ function openImportDialog(p){return new Promise(resolve=>{
     $('#iGo').onclick=()=>{
       let acc;
       if($('#iAcc').value==='__new'){
-        acc={id:uid(),name:$('#iName').value.trim()||defName,type:$('#iType').value,initial:0,acctid:p.acctid||''};
+        acc={id:uid(),name:$('#iName').value.trim()||mkName(),type:$('#iType').value,initial:0,acctid:p.acctid||''};
         const ib=$('#iBal');const bv=ib?parseNum(ib.value):NaN;
         if(isFinite(bv)){acc.anchorAmt=round2(acc.type==='cartao'?-Math.abs(bv):bv);acc.anchorDate=todayISO()}
         S.accounts.push(acc);
       } else acc=S.accounts.find(a=>a.id===$('#iAcc').value);
       if(p.balance!=null&&p.balDate){acc.anchorAmt=p.balance;acc.anchorDate=p.balDate}
       const r=importTx(acc,p.tx.filter(t=>!t.skip));
-      acc.imported=true;acc.lastImport=todayISO();acc.lastFormat=p.format;
+      acc.imported=true;acc.lastImport=todayISO();acc.lastFormat=p.format;if(p.bankId&&!acc.bank)acc.bank=p.bankId;else if(p.bankId&&acc.bank!==p.bankId&&!p.bankAuto)acc.bank=p.bankId;
       persist();view.month=monthOf(dates[dates.length-1]);pickDefaultMonth();view.tab='resumo';render();
       toast(`${r.added} lançamento${r.added===1?'':'s'} importado${r.added===1?'':'s'}${r.skipped?` · ${r.skipped} já existia${r.skipped===1?'':'m'}`:''}`);
       resolve(r);closeDlg();
@@ -1416,8 +1594,8 @@ function importTx(acc,list){
 function loadDemo(){
   let seed=20261003;const r=()=>(seed=(seed*1664525+1013904223)%4294967296)/4294967296;
   const pick=a=>a[Math.floor(r()*a.length)],between=(a,b)=>round2(a+(b-a)*r()),day=()=>1+Math.floor(r()*28);
-  const cc={id:uid(),name:'Conta corrente (exemplo)',type:'corrente',initial:3800,demo:true};
-  const card={id:uid(),name:'Cartão (exemplo)',type:'cartao',initial:0,demo:true};
+  const cc={id:uid(),bank:'santander',name:'Conta corrente (exemplo)',type:'corrente',initial:3800,demo:true};
+  const card={id:uid(),bank:'mercadopago',name:'Cartão (exemplo)',type:'cartao',initial:0,demo:true};
   S.accounts.push(cc,card);
   const today=todayISO(),cur=monthOf(today);let prevCard=0;
   const add=(acc,date,amt,desc)=>{if(date>today)return false;S.tx.push({id:uid(),acc:acc.id,date,amt:round2(amt),desc,cat:categorize(desc,amt),demo:true});return true};
@@ -1511,6 +1689,7 @@ const IC={
   shield:'<path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z"/>',
   down:'<path d="M12 4v12M7 11l5 5 5-5"/><path d="M4 20h16"/>',
   restore:'<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>',
+  pen:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
   phone:'<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>'
 };
 const ico=k=>`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k]}</svg>`;
@@ -1521,10 +1700,10 @@ function drawerHTML(){
   return `<div class="dr-head"><div class="logo"><span class="mark" aria-hidden="true">${$('.logo .mark').innerHTML}</span><span>Âncora <span class="logo-sub">Finances</span></span></div><button class="icon-x" id="drClose" aria-label="Fechar menu">✕</button></div>
   <div class="dr-sec">${nav.map(([id,l,i])=>item('tab:'+id,l,i,view.tab===id)).join('')}</div>
   <div class="dr-t">Ações rápidas</div>
-  <div class="dr-sec">${item('import','Importar extrato ou planilha','up')}${item('add','Adicionar lançamento','plus')}${item('addfx','Adicionar conta fixa','repeat')}</div>
+  <div class="dr-sec">${item('import','Importar extrato ou planilha','up')}${item('add','Adicionar lançamento','plus')}${item('adjbal','Corrigir saldo de uma conta','pen')}${item('addfx','Adicionar conta fixa','repeat')}</div>
   <div class="dr-t">Segurança e dados</div>
-  <div class="dr-sec">${item('sec','Acesso: PIN, senha e biometria','shield')}${item('locknow','Sair e bloquear','lock')}${item('bkout','Baixar cópia de segurança','down')}${item('bkin','Restaurar cópia','restore')}${canInstall?item('install','Instalar app no celular','phone'):''}</div>
-  <p class="dr-foot">Seus dados ficam só neste aparelho.${S.lastBackup?` Última cópia de segurança: ${fmtDate(S.lastBackup)}.`:''}</p>`;
+  <div class="dr-sec">${FB.user?item('sec','Conta e acesso','shield')+item('locknow','Bloquear agora','lock'):''}${item('bkout','Baixar cópia de segurança','down')}${item('bkin','Restaurar cópia','restore')}${canInstall?item('install','Instalar app no celular','phone'):''}</div>
+  <p class="dr-foot">${FB.user?`Conectado como ${esc(FB.user.email)}. Seus dados são sincronizados entre os aparelhos.`:'Seus dados ficam só neste aparelho.'}${S.lastBackup?` Última cópia de segurança: ${fmtDate(S.lastBackup)}.`:''}</p>`;
 }
 function openDrawer(){
   const d=$('#drawer');$('#drawerPanel').innerHTML=drawerHTML();d.hidden=false;$('#menuBtn').setAttribute('aria-expanded','true');
@@ -1542,6 +1721,7 @@ function drawerAction(a){
   else if(a==='addfx'){view.tab='fixas';render();openFxDialog()}
   else if(a==='sec')openSecurityDialog();
   else if(a==='locknow')lockNow();
+  else if(a==='adjbal')openBalDialog();
   else if(a==='bkout')exportBackup();
   else if(a==='bkin'){skipLockOnce=true;const f=$('#bkFile');f.value='';f.click()}
   else if(a==='install')$('#btnInstall').click();
@@ -1550,40 +1730,23 @@ $('#menuBtn').onclick=openDrawer;
 $('#drawerBg').onclick=closeDrawer;
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#drawer').hidden)closeDrawer()});
 
-/* ---------- Acesso: PIN, senha e biometria ---------- */
-const LOCK_KEY='ancora:lock';
-let LK=(()=>{try{return JSON.parse(localStorage.getItem(LOCK_KEY))||null}catch(e){return null}})();
-const saveLK=()=>{try{LK?localStorage.setItem(LOCK_KEY,JSON.stringify(LK)):localStorage.removeItem(LOCK_KEY)}catch(e){}};
+/* ---------- Conta (e-mail e senha), biometria e sincronização ---------- */
+const LK_KEY='ancora:device';
+let LK=(()=>{try{return JSON.parse(localStorage.getItem(LK_KEY))||null}catch(e){return null}})();
+const saveLK=()=>{try{LK?localStorage.setItem(LK_KEY,JSON.stringify(LK)):localStorage.removeItem(LK_KEY)}catch(e){}};
+try{localStorage.removeItem('ancora:lock')}catch(e){}
 const b64=buf=>btoa(String.fromCharCode(...new Uint8Array(buf)));
 const unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
-const isPinType=()=>!LK||LK.type!=='senha';
-const secretWord=()=>isPinType()?'PIN':'senha';
-async function hashPin(pin,salt,iter){
-  const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(pin),'PBKDF2',false,['deriveBits']);
+async function hashPw(pw,salt,iter){
+  const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveBits']);
   return b64(await crypto.subtle.deriveBits({name:'PBKDF2',salt:unb64(salt),iterations:iter,hash:'SHA-256'},k,256));
 }
-async function setSecret(secret,type,name){
-  const salt=b64(crypto.getRandomValues(new Uint8Array(16)));const iter=150000;
-  LK={...(LK||{}),type,salt,iter,hash:await hashPin(secret,salt,iter),len:secret.length,after:LK&&LK.after!=null?LK.after:0};
-  if(name!=null)LK.name=name;saveLK();
-}
-const setPin=pin=>setSecret(pin,'pin');
-async function checkPin(pin){return !!LK&&(await hashPin(pin,LK.salt,LK.iter))===LK.hash}
-function validateSecret(type,a,b){
-  if(type==='pin'){
-    if(!/^\d{4,6}$/.test(a))return 'O PIN precisa ter de 4 a 6 números.';
-    if(/^(\d)\1+$/.test(a)||'0123456789'.includes(a)||'9876543210'.includes(a))return 'Esse PIN é fácil de adivinhar. Escolha outro.';
-  } else {
-    if(a.length<6)return 'A senha precisa ter pelo menos 6 caracteres.';
-    if(!/[a-zA-Z]/.test(a)||!/\d/.test(a))return 'Use letras e números na senha.';
-  }
-  if(a!==b)return `As duas ${type==='pin'?'entradas do PIN':'senhas'} estão diferentes.`;
-  return '';
-}
+async function rememberPw(pw){const salt=b64(crypto.getRandomValues(new Uint8Array(16)));LK.salt=salt;LK.iter=150000;LK.hash=await hashPw(pw,salt,150000);saveLK()}
 async function bioAvailable(){try{return !!(window.PublicKeyCredential&&window.isSecureContext&&await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())}catch(e){return false}}
 async function bioRegister(){
+  const nm=(LK&&LK.email)||'Âncora Finances';
   const cred=await navigator.credentials.create({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),rp:{name:'Âncora Finances',id:location.hostname},
-    user:{id:crypto.getRandomValues(new Uint8Array(16)),name:LK&&LK.name?LK.name:'Âncora Finances',displayName:LK&&LK.name?LK.name:'Âncora Finances'},
+    user:{id:crypto.getRandomValues(new Uint8Array(16)),name:nm,displayName:(LK&&LK.name)||nm},
     pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
     authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required',residentKey:'discouraged'},timeout:60000,attestation:'none'}});
   LK.bio=b64(cred.rawId);saveLK();
@@ -1592,174 +1755,263 @@ async function bioVerify(){
   const a=await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),rpId:location.hostname,allowCredentials:[{type:'public-key',id:unb64(LK.bio)}],userVerification:'required',timeout:60000}});
   if(!a)return false;const ad=new Uint8Array(a.response.authenticatorData);return ad.length>32&&(ad[32]&4)!==0;
 }
-let locked=false,pinBuf='',lockFails=0,lockUntil=0,hiddenAt=0,skipLockOnce=false,bioBusy=false;const afterUnlock=[];
+async function enableBio(){
+  try{await bioRegister();toast('Biometria ativada neste aparelho')}
+  catch(e){toast(e&&e.name==='NotAllowedError'?'Biometria cancelada':'Não foi possível ativar a biometria neste aparelho')}
+}
+const FB={auth:null,db:null,user:null,col:null,unsub:null,last:{},first:true,mode:'cloud'};
+let locked=false,lockFails=0,lockUntil=0,hiddenAt=0,skipLockOnce=false,bioBusy=false,justSignedIn=false;const afterUnlock=[];
 const markSVG=()=>$('.logo .mark').innerHTML;
-const BIO_SVG='<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M6.5 6.5a8 8 0 0 1 11 0"/><path d="M4.5 11a8 8 0 0 1 1-3M19.5 11a8 8 0 0 0-1-3"/><path d="M8 12a4 4 0 0 1 8 0v1.5"/><path d="M12 12v4M8 15.5V12M16 16.5c0 1.5-.5 3-1.5 4.2M8.4 19.5A9 9 0 0 1 8 17"/></svg>';
+const BIO_SVG='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M6.5 6.5a8 8 0 0 1 11 0"/><path d="M4.5 11a8 8 0 0 1 1-3M19.5 11a8 8 0 0 0-1-3"/><path d="M8 12a4 4 0 0 1 8 0v1.5"/><path d="M12 12v4M8 15.5V12M16 16.5c0 1.5-.5 3-1.5 4.2M8.4 19.5A9 9 0 0 1 8 17"/></svg>';
 function hideApp(){locked=true;document.body.classList.add('is-locked');if(!$('#drawer').hidden){$('#drawer').classList.remove('open');$('#drawer').hidden=true}if(dlg.open)closeDlg();$('#lock').hidden=false}
-function lockNow(){
-  if(!LK)return showSetup();
-  hideApp();pinBuf='';drawLock(`Digite ${isPinType()?'seu PIN':'sua senha'}`);
-  if(LK.bio)setTimeout(tryBio,350);
-}
 function greet(){const h=new Date().getHours();return (h<12?'Bom dia':h<18?'Boa tarde':'Boa noite')+(LK&&LK.name?`, ${esc(LK.name)}`:'')}
-function drawLock(msg,bad){
-  const head=`<span class="mark lock-mark" aria-hidden="true">${markSVG()}</span><h1>${greet()}</h1><p class="lock-msg ${bad?'bad':''}" id="lockMsg" role="status">${esc(msg)}</p>`;
-  if(isPinType()){
-    const pad=['1','2','3','4','5','6','7','8','9',LK.bio?'bio':'','0','del'];
-    $('#lock').innerHTML=`<div class="lock-in">${head}
-      <div class="dots ${bad?'shake':''}" aria-hidden="true">${Array.from({length:LK.len},(_,i)=>`<i class="${i<pinBuf.length?'on':''}"></i>`).join('')}</div>
-      <div class="pad">${pad.map(k=>k===''?'<span></span>':k==='bio'?`<button class="key key-ic" data-k="bio" aria-label="Entrar com biometria">${BIO_SVG}</button>`:k==='del'?`<button class="key key-ic" data-k="del" aria-label="Apagar">⌫</button>`:`<button class="key" data-k="${k}">${k}</button>`).join('')}</div>
-      <button class="lock-link" id="lockForgot">Esqueci o PIN</button></div>`;
-    $('#lock').querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>lockKey(b.dataset.k));
-  } else {
-    $('#lock').innerHTML=`<div class="lock-in">${head}
-      <div class="lock-form ${bad?'shake':''}"><input id="lockPw" type="password" autocomplete="current-password" placeholder="Senha" aria-label="Senha"><button class="btn primary" id="lockGo">Entrar</button></div>
-      ${LK.bio?`<button class="btn lock-bio" id="lockBio">${BIO_SVG}<span>Entrar com biometria</span></button>`:''}
-      <button class="lock-link" id="lockForgot">Esqueci a senha</button></div>`;
-    const pw=$('#lockPw');$('#lockGo').onclick=()=>submitSecret(pw.value);pw.onkeydown=e=>{if(e.key==='Enter')submitSecret(pw.value)};
-    if(LK.bio)$('#lockBio').onclick=tryBio;
-    setTimeout(()=>{if(locked&&!bioBusy){const i=$('#lockPw');i&&i.focus()}},LK.bio?900:50);
+function lockScreen(html){$('#lock').innerHTML=`<div class="lock-in setup"><span class="mark lock-mark" aria-hidden="true">${markSVG()}</span>${html}</div>`}
+function fbErr(e){
+  const c=(e&&e.code)||'';
+  const m={'auth/invalid-email':'Esse e-mail não parece válido.','auth/user-not-found':'E-mail ou senha incorretos.','auth/wrong-password':'E-mail ou senha incorretos.','auth/invalid-credential':'E-mail ou senha incorretos.','auth/invalid-login-credentials':'E-mail ou senha incorretos.',
+    'auth/email-already-in-use':'Já existe uma conta com esse e-mail. Use Entrar.','auth/weak-password':'Senha fraca. Use pelo menos 6 caracteres com letras e números.','auth/too-many-requests':'Muitas tentativas. Espere alguns minutos e tente de novo.',
+    'auth/network-request-failed':'Sem conexão com a internet. Verifique e tente de novo.','auth/user-disabled':'Esta conta foi desativada.','auth/requires-recent-login':'Por segurança, entre de novo e repita a operação.'};
+  return m[c]||'Não foi possível concluir. Tente de novo.';
+}
+function validPw(a,b){
+  if(a.length<6)return 'A senha precisa ter pelo menos 6 caracteres.';
+  if(!/[a-zA-Z]/.test(a)||!/\d/.test(a))return 'Use letras e números na senha.';
+  if(b!=null&&a!==b)return 'As duas senhas estão diferentes.';
+  return '';
+}
+/* Tela de entrar / criar conta */
+function showLogin(mode,msg){
+  hideApp();mode=mode||'entrar';
+  const isNew=mode==='criar';
+  lockScreen(`<h1>${isNew?'Criar sua conta':'Entrar'}</h1>
+    <p class="lock-msg">${msg?esc(msg):isNew?'Com uma conta, seus dados aparecem no celular e no computador.':'Use seu e-mail e senha para ver suas finanças em qualquer aparelho.'}</p>
+    <div class="seg auth-tabs" role="group"><button type="button" id="tEnt" aria-pressed="${!isNew}">Entrar</button><button type="button" id="tNew" aria-pressed="${isNew}">Criar conta</button></div>
+    <form class="setup-form" id="authForm" novalidate>
+      ${isNew?`<label for="auName">Seu nome</label><input id="auName" autocomplete="given-name" placeholder="Como podemos te chamar">`:''}
+      <label for="auEmail">E-mail</label><input id="auEmail" type="email" autocomplete="username" inputmode="email" placeholder="voce@email.com" value="${esc((LK&&LK.email)||'')}">
+      <label for="auPw">Senha</label><input id="auPw" type="password" autocomplete="${isNew?'new-password':'current-password'}" placeholder="${isNew?'Mínimo 6, com letras e números':'Sua senha'}">
+      ${isNew?`<label for="auPw2">Repita a senha</label><input id="auPw2" type="password" autocomplete="new-password">`:''}
+      <p class="lock-msg bad" id="auErr" role="alert"></p>
+      <button class="btn primary" id="auGo" type="submit">${isNew?'Criar conta':'Entrar'}</button>
+    </form>
+    ${isNew?'':`<button class="lock-link" id="auForgot">Esqueci a senha</button>`}`);
+  $('#tEnt').onclick=()=>showLogin('entrar');$('#tNew').onclick=()=>showLogin('criar');
+  const f=$('#auForgot');if(f)f.onclick=()=>forgotPassword($('#auEmail').value.trim());
+  $('#authForm').onsubmit=async e=>{
+    e.preventDefault();const err=$('#auErr'),go=$('#auGo');err.textContent='';
+    const email=$('#auEmail').value.trim(),pw=$('#auPw').value;
+    if(!/^\S+@\S+\.\S+$/.test(email)){err.textContent='Digite um e-mail válido.';return}
+    if(isNew){const v=validPw(pw,$('#auPw2').value);if(v){err.textContent=v;return}}
+    else if(!pw){err.textContent='Digite sua senha.';return}
+    go.disabled=true;go.textContent=isNew?'Criando…':'Entrando…';
+    try{
+      justSignedIn=true;
+      if(isNew){
+        const name=$('#auName').value.trim();
+        const cr=await FB.auth.createUserWithEmailAndPassword(email,pw);
+        if(name)await cr.user.updateProfile({displayName:name});
+        try{await cr.user.sendEmailVerification()}catch(_){}
+        LK={uid:cr.user.uid,email,name:name||'',after:0};await rememberPw(pw);
+        startSync(cr.user);
+      } else {
+        const cr=await FB.auth.signInWithEmailAndPassword(email,pw);
+        LK={...(LK&&LK.uid===cr.user.uid?LK:{after:0}),uid:cr.user.uid,email,name:cr.user.displayName||((LK&&LK.uid===cr.user.uid)?LK.name:'')||''};await rememberPw(pw);
+        startSync(cr.user);
+      }
+    }catch(ex){justSignedIn=false;err.textContent=fbErr(ex);go.disabled=false;go.textContent=isNew?'Criar conta':'Entrar'}
+  };
+  setTimeout(()=>{const i=isNew?$('#auName'):($('#auEmail').value?$('#auPw'):$('#auEmail'));i&&i.focus()},60);
+}
+async function forgotPassword(email){
+  email=email||(LK&&LK.email)||'';
+  const v=await askText('Recuperar senha','Seu e-mail',email,'Enviar e-mail');if(v===null)return;
+  if(!/^\S+@\S+\.\S+$/.test(v.trim())){toast('Digite um e-mail válido.');return}
+  try{await FB.auth.sendPasswordResetEmail(v.trim());await infoDlg('E-mail enviado',`<p>Enviamos um link para <b>${esc(v.trim())}</b>. Abra o e-mail, crie a senha nova e depois entre no app com ela. Se não encontrar, olhe também a caixa de spam.</p>`)}
+  catch(ex){toast(fbErr(ex))}
+}
+/* Tela de desbloqueio (sessão já aberta neste aparelho) */
+function lockNow(){
+  if(!FB.user)return showLogin();
+  hideApp();drawUnlock('');
+  if(LK&&LK.bio)setTimeout(tryBio,350);
+}
+function drawUnlock(msg,bad){
+  lockScreen(`<h1>${greet()}</h1>
+    <p class="lock-msg ${bad?'bad':''}" id="lockMsg" role="status">${msg?esc(msg):esc((LK&&LK.email)||'')}</p>
+    ${LK&&LK.bio?`<button class="btn primary lock-bio" id="lockBio">${BIO_SVG}<span>Entrar com biometria</span></button><p class="or">ou use sua senha</p>`:''}
+    <form class="lock-form ${bad?'shake':''}" id="unForm"><input id="lockPw" type="password" autocomplete="current-password" placeholder="Senha" aria-label="Senha"><button class="btn ${LK&&LK.bio?'':'primary'}" id="lockGo" type="submit">Entrar</button></form>
+    <button class="lock-link" id="lockForgot">Esqueci a senha</button>
+    <button class="lock-link muted-link" id="lockOther">Entrar com outra conta</button>`);
+  $('#unForm').onsubmit=e=>{e.preventDefault();submitUnlock($('#lockPw').value)};
+  if(LK&&LK.bio)$('#lockBio').onclick=tryBio;
+  $('#lockForgot').onclick=()=>forgotPassword();
+  $('#lockOther').onclick=async()=>{if(await askConfirm('Entrar com outra conta','Você vai sair desta conta neste aparelho. Seus dados continuam guardados na conta.','Sair da conta'))signOutAll()};
+  setTimeout(()=>{if(locked&&!bioBusy){const i=$('#lockPw');i&&i.focus()}},LK&&LK.bio?900:60);
+}
+async function submitUnlock(pw){
+  if(!locked||!pw)return;
+  if(Date.now()<lockUntil){$('#lockMsg').textContent=`Muitas tentativas. Aguarde ${Math.ceil((lockUntil-Date.now())/1000)} segundos.`;return}
+  let ok=LK&&LK.hash&&(await hashPw(pw,LK.salt,LK.iter))===LK.hash;
+  if(!ok&&navigator.onLine&&FB.user){
+    try{await FB.user.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(FB.user.email,pw));ok=true;await rememberPw(pw)}catch(e){}
   }
-  $('#lockForgot').onclick=forgotPin;
-}
-function updDots(){$('#lock').querySelectorAll('.dots i').forEach((d,i)=>d.classList.toggle('on',i<pinBuf.length))}
-async function submitSecret(v){
-  if(!locked||!v)return;
-  if(Date.now()<lockUntil){$('#lockMsg').textContent=`Muitas tentativas. Aguarde ${Math.ceil((lockUntil-Date.now())/1000)} segundos.`;return}
-  if(await checkPin(v))return unlock();
-  lockFails++;pinBuf='';const w=secretWord();
-  if(lockFails>=5){lockUntil=Date.now()+30000*(lockFails-4);drawLock(`${w==='PIN'?'PIN incorreto':'Senha incorreta'}. Aguarde ${30*(lockFails-4)} segundos.`,true)}
-  else drawLock(`${w==='PIN'?'PIN incorreto':'Senha incorreta'}. Tente de novo.`,true);
-}
-async function lockKey(k){
-  if(!locked||!isPinType())return;
-  if(k==='bio')return tryBio();
-  if(k==='del'){pinBuf=pinBuf.slice(0,-1);updDots();return}
-  if(Date.now()<lockUntil){$('#lockMsg').textContent=`Muitas tentativas. Aguarde ${Math.ceil((lockUntil-Date.now())/1000)} segundos.`;return}
-  if(pinBuf.length>=LK.len)return;
-  pinBuf+=k;updDots();
-  if(pinBuf.length===LK.len)submitSecret(pinBuf);
+  if(ok)return unlock();
+  lockFails++;
+  if(lockFails>=5){lockUntil=Date.now()+30000*(lockFails-4);drawUnlock(`Senha incorreta. Aguarde ${30*(lockFails-4)} segundos.`,true)}
+  else drawUnlock('Senha incorreta. Tente de novo.',true);
 }
 async function tryBio(){
   if(!locked||!LK||!LK.bio||bioBusy)return;bioBusy=true;
-  try{if(await bioVerify())unlock()}catch(e){const m=$('#lockMsg');if(m&&locked)m.textContent=`Use ${isPinType()?'o PIN':'a senha'} ou toque na biometria para tentar de novo.`}
+  try{if(await bioVerify())unlock()}catch(e){const m=$('#lockMsg');if(m&&locked)m.textContent='Use a senha ou toque em Entrar com biometria para tentar de novo.'}
   bioBusy=false;
 }
 function unlock(){
-  locked=false;lockFails=0;pinBuf='';hiddenAt=0;
+  locked=false;lockFails=0;hiddenAt=0;
   $('#lock').hidden=true;$('#lock').innerHTML='';document.body.classList.remove('is-locked');render();
   while(afterUnlock.length)afterUnlock.shift()();
 }
-async function forgotPin(){
-  const w=secretWord();
-  const ok=await askConfirm(`Esqueceu ${w==='PIN'?'o PIN':'a senha'}?`,`Para proteger seus dados, ${w==='PIN'?'o PIN':'a senha'} não pode ser recuperad${w==='PIN'?'o':'a'}. Você pode apagar os dados deste aparelho, criar um acesso novo e depois restaurar sua última cópia de segurança pelo menu.`,'Apagar dados e criar acesso novo',true);
-  if(!ok)return;
-  S={accounts:[],tx:[],budgets:{},rules:{},fixed:[]};persist();LK=null;saveLK();showSetup();
+async function offerBioThenUnlock(){
+  if(LK&&!LK.bio&&await bioAvailable()){
+    lockScreen(`<h1>Entrar com biometria?</h1>
+      <p class="lock-msg">Use a digital ou o rosto para abrir o Âncora neste aparelho sem digitar a senha. O aparelho pode perguntar se quer criar uma chave de acesso: confirme.</p>
+      <div class="setup-form"><button class="btn primary" id="boYes">${BIO_SVG}<span>Ativar biometria</span></button><button class="btn" id="boNo">Agora não</button></div>`);
+    $('#boYes').onclick=async()=>{await enableBio();unlock()};
+    $('#boNo').onclick=()=>{unlock();toast('Você pode ativar a biometria pelo menu, em Conta e acesso.')};
+  } else unlock();
 }
-/* Primeiro acesso: criação obrigatória */
-function showSetup(){
-  hideApp();
-  let type='pin';
-  const draw=()=>{
-    $('#lock').innerHTML=`<div class="lock-in setup">
-      <span class="mark lock-mark" aria-hidden="true">${markSVG()}</span>
-      <h1>Crie seu acesso</h1>
-      <p class="lock-msg">O Âncora vai pedir este acesso sempre que for aberto, como os apps de banco.</p>
-      <div class="setup-form">
-        <label for="suName">Como podemos te chamar?</label><input id="suName" autocomplete="given-name" placeholder="Seu nome" value="${esc((LK&&LK.name)||'')}">
-        <span class="lbl">Tipo de acesso</span>
-        <div class="seg" role="group" aria-label="Tipo de acesso"><button type="button" id="suPin" aria-pressed="${type==='pin'}">PIN numérico</button><button type="button" id="suPw" aria-pressed="${type==='senha'}">Senha</button></div>
-        <label for="su1">${type==='pin'?'PIN (4 a 6 números)':'Senha (mínimo 6, com letras e números)'}</label>
-        <input id="su1" type="password" ${type==='pin'?'inputmode="numeric" maxlength="6"':''} autocomplete="new-password">
-        <label for="su2">Repita ${type==='pin'?'o PIN':'a senha'}</label>
-        <input id="su2" type="password" ${type==='pin'?'inputmode="numeric" maxlength="6"':''} autocomplete="new-password">
-        <p class="lock-msg bad" id="suErr" role="alert"></p>
-        <button class="btn primary" id="suGo">Criar acesso</button>
-      </div>
-      <p class="setup-note">Se esquecer, não há como recuperar: será preciso apagar os dados e restaurar uma cópia de segurança.</p></div>`;
-    const keepName=()=>$('#suName').value;
-    $('#suPin').onclick=()=>{const n=keepName();type='pin';draw();$('#suName').value=n};
-    $('#suPw').onclick=()=>{const n=keepName();type='senha';draw();$('#suName').value=n};
-    $('#su2').onkeydown=e=>{if(e.key==='Enter')$('#suGo').click()};
-    $('#suGo').onclick=async()=>{
-      const name=$('#suName').value.trim(),a=$('#su1').value,b=$('#su2').value;
-      const err=validateSecret(type,a,b);if(err){$('#suErr').textContent=err;return}
-      $('#suGo').disabled=true;
-      await setSecret(a,type,name);
-      if(await bioAvailable())showBioOffer();else{unlock();toast('Acesso criado')}
-    };
-  };
-  draw();setTimeout(()=>{const i=$('#suName');i&&i.focus()},50);
+async function signOutAll(){
+  try{if(FB.unsub)FB.unsub();FB.unsub=null}catch(e){}
+  try{if(FB.db&&FB.db.clearPersistence){await FB.auth.signOut();try{await FB.db.terminate();await FB.db.clearPersistence()}catch(_){}}else await FB.auth.signOut()}catch(e){}
+  FB.user=null;FB.last={};FB.first=true;S={accounts:[],tx:[],budgets:{},rules:{},fixed:[]};
+  const email=LK&&LK.email;LK={email,after:0};saveLK();
+  try{localStorage.removeItem(LS_KEY)}catch(e){}
+  location.reload();
 }
-function showBioOffer(){
-  $('#lock').innerHTML=`<div class="lock-in setup">
-    <span class="mark lock-mark" aria-hidden="true">${markSVG()}</span>
-    <h1>Entrar com biometria?</h1>
-    <p class="lock-msg">Use a digital ou o rosto para abrir o Âncora sem digitar ${isPinType()?'o PIN':'a senha'}. O celular pode perguntar se quer criar uma chave de acesso: confirme.</p>
-    <div class="setup-form"><button class="btn primary" id="boYes">${BIO_SVG}<span>Ativar biometria</span></button><button class="btn" id="boNo">Agora não</button></div></div>`;
-  $('#boYes').onclick=async()=>{await enableBio();unlock()};
-  $('#boNo').onclick=()=>{unlock();toast('Acesso criado. Você pode ativar a biometria pelo menu.')};
+/* Sincronização com o Firestore */
+const metaOf=X=>({accounts:X.accounts||[],budgets:X.budgets||{},rules:X.rules||{},fixed:X.fixed||[],lastBackup:X.lastBackup||null});
+function snapToState(snap){
+  const next={accounts:[],tx:[],budgets:{},rules:{},fixed:[],lastBackup:null},last={};
+  snap.forEach(d=>{const v=d.data()||{};
+    if(d.id==='meta'){Object.assign(next,metaOf(v));last.meta=JSON.stringify(metaOf(v))}
+    else if(d.id.startsWith('tx-')){const it=v.items||[];next.tx.push(...it);last[d.id]=JSON.stringify(it)}});
+  return {next,last};
 }
-document.addEventListener('keydown',e=>{
-  if(!locked||dlg.open||!LK||!isPinType()||!$('#lock').querySelector('.pad'))return;
-  if(/^[0-9]$/.test(e.key)){e.preventDefault();lockKey(e.key)}
-  else if(e.key==='Backspace'){e.preventDefault();lockKey('del')}
-});
+function startSync(user){
+  FB.user=user;FB.first=true;
+  FB.col=FB.db.collection('users').doc(user.uid).collection('data');
+  if(FB.unsub)FB.unsub();
+  setStatus('loading');
+  FB.unsub=FB.col.onSnapshot(snap=>{
+    const {next,last}=snapToState(snap);
+    if(FB.first){
+      FB.first=false;
+      const local=loadLocal();const localHas=local&&((local.tx||[]).length||(local.accounts||[]).length||(local.fixed||[]).length);
+      if(localHas&&!snap.size){
+        S={accounts:[],budgets:{},rules:{},fixed:[],...local};FB.last={};flush();try{localStorage.removeItem(LS_KEY)}catch(e){}
+        toast('Os dados deste aparelho foram enviados para a sua conta');
+      } else if(localHas&&snap.size){
+        S=next;FB.last=last;
+        afterUnlock.push(()=>chooseData(local));
+      } else {S=next;FB.last=last}
+      setStatus(snap.metadata&&snap.metadata.fromCache?'offline':'synced');
+      pickDefaultMonth();
+      if(migrateBanks())persist();
+      if(justSignedIn){justSignedIn=false;offerBioThenUnlock()}
+      else lockNow();
+      return;
+    }
+    const changed=Object.keys({...last,...FB.last}).some(k=>last[k]!==FB.last[k]);
+    setStatus(snap.metadata&&snap.metadata.hasPendingWrites?'saving':snap.metadata&&snap.metadata.fromCache?'offline':'synced');
+    if(!changed)return;
+    if(store.timer){return}
+    S=next;FB.last=last;if(!locked)render();
+  },err=>{console.error(err);setStatus('error')});
+}
+async function chooseData(local){
+  const nL=(local.tx||[]).length,nC=S.tx.length;
+  const keepCloud=await askConfirm('Qual versão usar?',`Este aparelho tem ${nL} lançamentos guardados de antes, e a sua conta tem ${nC}. Normalmente a versão da conta é a mais completa.`,`Usar a da conta (${nC})`);
+  if(!keepCloud){
+    const sure=await askConfirm('Substituir os dados da conta?',`Os ${nC} lançamentos da conta serão trocados pelos ${nL} deste aparelho, em todos os aparelhos.`,'Substituir',true);
+    if(sure){S={accounts:[],budgets:{},rules:{},fixed:[],...local};persist();render();toast('Dados deste aparelho enviados para a conta')}
+  }
+  try{localStorage.removeItem(LS_KEY)}catch(e){}
+}
 document.addEventListener('visibilitychange',()=>{
-  if(!LK)return;
+  if(!FB.user||!LK)return;
   if(document.visibilityState==='hidden'){
     if(skipLockOnce){skipLockOnce=false;hiddenAt=0;return}
     hiddenAt=Date.now();if(LK.after===0&&!locked)lockNow();
-  } else if(!locked&&hiddenAt&&Date.now()-hiddenAt>=LK.after*1000)lockNow();
+  } else if(!locked&&hiddenAt&&LK.after>0&&Date.now()-hiddenAt>=LK.after*1000)lockNow();
 });
-function askPin(title,label){return new Promise(res=>openDlg(`<h2>${esc(title)}</h2><div class="field"><label for="apv">${esc(label)}</label><input id="apv" type="password" ${isPinType()?'inputmode="numeric" maxlength="6"':''} autocomplete="current-password"></div><p id="apErr" style="color:var(--out);margin:0"></p><div class="dlg-act"><button class="btn" id="apNo">Cancelar</button><button class="btn primary" id="apYes">Continuar</button></div>`,()=>{
-  $('#apNo').onclick=()=>{res(null);closeDlg()};
-  $('#apYes').onclick=async()=>{const v=$('#apv').value;if(!(await checkPin(v))){$('#apErr').textContent=isPinType()?'PIN incorreto.':'Senha incorreta.';$('#apv').value='';return}res(v);closeDlg()};
-  $('#apv').onkeydown=e=>{if(e.key==='Enter')$('#apYes').click()};setTimeout(()=>{const i=$('#apv');i&&i.focus()},30);
-},()=>res(null)))}
-function openCredSetup(){return new Promise(res=>{
-  let type=isPinType()?'pin':'senha';
-  const draw=()=>openDlg(`<h2>Alterar acesso</h2>
-    <div class="field"><div class="seg"><button type="button" id="cPin" aria-pressed="${type==='pin'}">PIN numérico</button><button type="button" id="cPw" aria-pressed="${type==='senha'}">Senha</button></div></div>
-    <div class="field"><label for="np1">${type==='pin'?'Novo PIN (4 a 6 números)':'Nova senha (mínimo 6, com letras e números)'}</label><input id="np1" type="password" ${type==='pin'?'inputmode="numeric" maxlength="6"':''} autocomplete="new-password"></div>
-    <div class="field"><label for="np2">Repita ${type==='pin'?'o PIN':'a senha'}</label><input id="np2" type="password" ${type==='pin'?'inputmode="numeric" maxlength="6"':''} autocomplete="new-password"></div>
-    <p id="npErr" style="color:var(--out);margin:0"></p>
-    <div class="dlg-act"><button class="btn" id="npNo">Cancelar</button><button class="btn primary" id="npYes">Salvar</button></div>`,()=>{
-      $('#cPin').onclick=()=>{type='pin';dlgCb=null;draw()};$('#cPw').onclick=()=>{type='senha';dlgCb=null;draw()};
-      $('#npNo').onclick=()=>{res(false);closeDlg()};
-      $('#npYes').onclick=async()=>{const a=$('#np1').value,b=$('#np2').value;const err=validateSecret(type,a,b);if(err){$('#npErr').textContent=err;return}
-        await setSecret(a,type);res(true);closeDlg()};
-      $('#np2').onkeydown=e=>{if(e.key==='Enter')$('#npYes').click()};setTimeout(()=>{const i=$('#np1');i&&i.focus()},30);
-    },()=>res(false));
-  draw();
-})}
+/* Conta e acesso (menu) */
 async function openSecurityDialog(){
-  if(!LK)return showSetup();
+  if(!FB.user)return;
   const bioOk=await bioAvailable();
   const afterOpts=[[0,'Sempre que abrir o app'],[60,'Se ficar mais de 1 minuto fora'],[300,'Se ficar mais de 5 minutos fora'],[900,'Se ficar mais de 15 minutos fora']];
-  openDlg(`<h2>Acesso ao app</h2>
-    <div class="sec-row"><div><b>${isPinType()?'PIN':'Senha'}</b><small>${isPinType()?`PIN com ${LK.len} números`:'Senha com letras e números'}${LK.name?` · ${esc(LK.name)}`:''}</small></div><div class="sec-act"><button class="btn small" id="sChange">Alterar acesso</button></div></div>
-    <div class="sec-row"><div><b>Biometria</b><small>${bioOk?(LK.bio?'Ativa: entre com a digital ou o rosto':'Entre com a digital ou o rosto, sem digitar nada'):'Este celular ou navegador não oferece biometria para apps da web'}</small></div><div class="sec-act">${bioOk?(LK.bio?'<button class="btn small" id="sBioOff">Desativar</button>':'<button class="btn small primary" id="sBioOn">Ativar biometria</button>'):''}</div></div>
-    <div class="field" style="margin-top:12px"><label for="sAfter">Pedir acesso</label><select id="sAfter">${afterOpts.map(([v,l])=>`<option value="${v}" ${LK.after===v?'selected':''}>${l}</option>`).join('')}</select></div>
-    <div class="field"><label for="sName">Seu nome na tela de entrada</label><input id="sName" value="${esc(LK.name||'')}" placeholder="Seu nome"></div>
-    <p class="muted" style="font-size:13px">Se esquecer ${isPinType()?'o PIN':'a senha'}, não há como recuperar: será preciso apagar os dados deste aparelho e restaurar uma cópia de segurança. Baixe uma cópia pelo menu de vez em quando.</p>
-    <div class="dlg-act"><button class="btn" id="sClose">Fechar</button></div>`,()=>{
+  openDlg(`<h2>Conta e acesso</h2>
+    <div class="sec-row"><div><b>${esc(LK.name||'Sua conta')}</b><small>${esc(FB.user.email)}${FB.user.emailVerified?' · e-mail confirmado':' · e-mail não confirmado'}</small></div><div class="sec-act">${FB.user.emailVerified?'':'<button class="btn small" id="sVer">Reenviar confirmação</button>'}</div></div>
+    <div class="sec-row"><div><b>Senha</b><small>Usada para entrar em qualquer aparelho</small></div><div class="sec-act"><button class="btn small" id="sPw">Alterar senha</button></div></div>
+    <div class="sec-row"><div><b>Biometria neste aparelho</b><small>${bioOk?(LK.bio?'Ativa: entre com a digital ou o rosto':'Entre com a digital ou o rosto, sem digitar a senha'):'Este aparelho ou navegador não oferece biometria para apps da web'}</small></div><div class="sec-act">${bioOk?(LK.bio?'<button class="btn small" id="sBioOff">Desativar</button>':'<button class="btn small primary" id="sBioOn">Ativar</button>'):''}</div></div>
+    <div class="field" style="margin-top:12px"><label for="sAfter">Pedir senha ou biometria</label><select id="sAfter">${afterOpts.map(([v,l])=>`<option value="${v}" ${LK.after===v?'selected':''}>${l}</option>`).join('')}</select></div>
+    <div class="field"><label for="sName">Seu nome</label><input id="sName" value="${esc(LK.name||'')}" placeholder="Seu nome"></div>
+    <div class="dlg-act"><button class="btn danger" id="sOut">Sair da conta</button><button class="btn" id="sClose">Fechar</button></div>`,()=>{
     $('#sClose').onclick=closeDlg;
-    $('#sChange').onclick=async()=>{if(await askPin('Alterar acesso',`Digite ${isPinType()?'o PIN atual':'a senha atual'}`)!==null&&await openCredSetup())toast('Acesso alterado');openSecurityDialog()};
+    const sv=$('#sVer');if(sv)sv.onclick=async()=>{try{await FB.user.sendEmailVerification();toast('E-mail de confirmação enviado')}catch(e){toast(fbErr(e))}};
+    $('#sPw').onclick=changePassword;
     const bon=$('#sBioOn');if(bon)bon.onclick=async()=>{await enableBio();openSecurityDialog()};
-    const boff=$('#sBioOff');if(boff)boff.onclick=()=>{delete LK.bio;saveLK();toast('Biometria desativada');openSecurityDialog()};
+    const boff=$('#sBioOff');if(boff)boff.onclick=()=>{delete LK.bio;saveLK();toast('Biometria desativada neste aparelho');openSecurityDialog()};
     $('#sAfter').onchange=()=>{LK.after=Number($('#sAfter').value);saveLK();toast('Preferência salva')};
-    $('#sName').onchange=()=>{LK.name=$('#sName').value.trim();saveLK();toast('Nome salvo')};
+    $('#sName').onchange=async()=>{LK.name=$('#sName').value.trim();saveLK();try{await FB.user.updateProfile({displayName:LK.name})}catch(e){}toast('Nome salvo')};
+    $('#sOut').onclick=async()=>{if(await askConfirm('Sair da conta','Seus dados continuam guardados na conta. Para ver de novo neste aparelho, entre com e-mail e senha.','Sair da conta'))signOutAll()};
   });
 }
-async function enableBio(){
-  try{await bioRegister();toast('Biometria ativada')}
-  catch(e){toast(e&&e.name==='NotAllowedError'?'Biometria cancelada':'Não foi possível ativar a biometria neste aparelho')}
+function changePassword(){
+  openDlg(`<h2>Alterar senha</h2>
+    <div class="field"><label for="cp0">Senha atual</label><input id="cp0" type="password" autocomplete="current-password"></div>
+    <div class="field"><label for="cp1">Nova senha</label><input id="cp1" type="password" autocomplete="new-password" placeholder="Mínimo 6, com letras e números"></div>
+    <div class="field"><label for="cp2">Repita a nova senha</label><input id="cp2" type="password" autocomplete="new-password"></div>
+    <p id="cpErr" style="color:var(--out);margin:0"></p>
+    <div class="dlg-act"><button class="btn" id="cpNo">Cancelar</button><button class="btn primary" id="cpYes">Salvar senha</button></div>`,()=>{
+    $('#cpNo').onclick=closeDlg;
+    $('#cpYes').onclick=async()=>{
+      const a=$('#cp0').value,b=$('#cp1').value,c=$('#cp2').value;const v=validPw(b,c);if(v){$('#cpErr').textContent=v;return}
+      try{await FB.user.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(FB.user.email,a));await FB.user.updatePassword(b);await rememberPw(b);closeDlg();toast('Senha alterada em todos os aparelhos')}
+      catch(e){$('#cpErr').textContent=(e&&(e.code==='auth/wrong-password'||e.code==='auth/invalid-credential'||e.code==='auth/invalid-login-credentials'))?'A senha atual está incorreta.':fbErr(e)}
+    };
+  });
 }
-if(LK)lockNow();else showSetup();
+/* Sem servidor configurado: modo só neste aparelho */
+function showNoConfig(){
+  hideApp();
+  lockScreen(`<h1>Falta conectar a conta</h1>
+    <p class="lock-msg">Para entrar com e-mail e senha e ver os mesmos dados no celular e no computador, o arquivo <b>firebase-config.js</b> precisa ser preenchido.</p>
+    <div class="setup-form"><button class="btn" id="ncLocal">Usar só neste aparelho por enquanto</button></div>`);
+  $('#ncLocal').onclick=()=>{FB.mode='local';const local=loadLocal();if(local)S={accounts:[],budgets:{},rules:{},fixed:[],...local};setStatus(hasData()?'local':'');pickDefaultMonth();unlock()};
+}
+function loadScriptOnce(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error(src));document.head.appendChild(s)})}
+async function boot(){
+  hideApp();lockScreen(`<h1>Âncora <span class="logo-sub">Finances</span></h1><p class="lock-msg">Carregando…</p>`);
+  const cfg=window.ANCORA_FIREBASE;
+  if(!cfg||!cfg.apiKey||/COLE|AQUI/i.test(cfg.apiKey)){showNoConfig();return}
+  try{
+    if(!(window.firebase&&firebase.firestore)){for(const f of ['firebase-app-compat.js','firebase-auth-compat.js','firebase-firestore-compat.js'])await loadScriptOnce(f)}
+    if(!firebase.apps.length)firebase.initializeApp(cfg);
+    FB.auth=firebase.auth();FB.db=firebase.firestore();
+    try{await FB.db.enablePersistence({synchronizeTabs:true})}catch(e){}
+  }catch(e){lockScreen(`<h1>Sem conexão</h1><p class="lock-msg">Não foi possível carregar o app. Abra com internet uma vez e tente de novo.</p><div class="setup-form"><button class="btn primary" onclick="location.reload()">Tentar de novo</button></div>`);return}
+  FB.auth.onAuthStateChanged(u=>{
+    if(!u){FB.user=null;if(FB.unsub){FB.unsub();FB.unsub=null}showLogin();return}
+    if(FB.user&&FB.user.uid===u.uid){FB.user=u;return}
+    if(justSignedIn)return;
+    if(!LK||LK.uid!==u.uid){LK={...(LK||{}),uid:u.uid,email:u.email,name:u.displayName||'',after:LK&&LK.after!=null?LK.after:0};saveLK()}
+    startSync(u);
+  });
+}
 
 
-initStore().then(checkShared);
+
+boot();
+checkShared();
 </script>
 </body>
 </html>
