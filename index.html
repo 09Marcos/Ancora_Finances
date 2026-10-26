@@ -648,7 +648,6 @@ function resumoHTML(){
       <div class="bal num ${bal<0?'neg':''}">${banks.length?money(bal):'—'}</div>
       <div class="accs">${banks.map(a=>`<button class="chip chip-btn" data-adj="${a.id}" title="Corrigir saldo de ${esc(a.name)}">${esc(a.name)} <b class="num">${money(accBalance(a))}</b>${PEN}</button>`).join('')}
       ${cards.map(a=>{const b=accBalance(a);return `<button class="chip chip-btn" data-adj="${a.id}" title="Corrigir fatura de ${esc(a.name)}">${esc(a.name)} <b class="num">${b<0?'fatura '+money(-b):money(b)}</b>${PEN}</button>`}).join('')}</div>
-      ${S.accounts.length?`<button class="lock-link adj-link" id="adjBal">Corrigir saldo</button>`:''}
     </div>
     <div>
       <div class="flow-nums num">
